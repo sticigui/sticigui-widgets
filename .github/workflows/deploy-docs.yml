@@ -50,7 +50,7 @@ jobs:
         working-directory: docs
       
       - name: Copy public data files to build
-        run: cp -r ../public-data docs/_build/html/
+        run: cp -r public-data docs/_build/html/
       
       - name: Upload artifact
         uses: actions/upload-pages-artifact@v3
