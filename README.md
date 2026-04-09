@@ -4,10 +4,10 @@ This repository contains interactive statistics widgets ported from Philip Stark
 
 ## Overview
 
-- 14 interactive widgets for statistics education
+- Interactive widgets for statistics education
 - Built with D3.js and jstat, bundled as ES modules
-- Runs entirely in the browser (no server required)
-- Supports keyboard navigation and light/dark themes
+- Runs in the browser (no server required)
+- Some support for light/dark themes
 - Uses seeded random number generation for reproducibility
 
 ## Building
@@ -26,18 +26,6 @@ npm run build
 
 This produces optimized ESM bundles in `widgets/*/dist/widget.mjs`.
 
-### Build in watch mode (coming soon)
-
-```bash
-npm run build:watch
-```
-
-### Run tests
-
-```bash
-npm test
-```
-
 ## Usage in MyST
 
 Once built, widgets can be embedded in MyST Markdown using the `anywidget` directive:
@@ -48,33 +36,10 @@ Once built, widgets can be embedded in MyST Markdown using the `anywidget` direc
 \```
 ```
 
-## Widget Inventory
+## Documentation
 
-### Distribution Viewers
-- `distribution-viewer.mjs` — Normal, Chi-Square, and t-distribution probability calculators
+The widget inventory can be browsed in this repository's [MyST documentation](https://sticigui.github.io/sticigui-widgets).
 
-### Histogram Tools
-- `binhist.mjs` — Binomial distribution histogram with normal approximation
-- `histogram.mjs` — Data histogram with highlight regions
-- `norm-approx.mjs` — Normal approximation to data
-
-### Calculators
-- `prob-calc.mjs` — Multi-distribution probability calculator
-- `stats-calc.mjs` — Scientific calculator with statistical functions
-
-### Simulations
-- `lln.mjs` — Law of Large Numbers demonstration
-- `confidence-intervals.mjs` — Confidence interval simulation
-- `sampling-dist.mjs` — Sampling distribution simulator
-
-### Scatterplot Family
-- `correlation.mjs` — Correlation and regression explorer
-- `scatterplot.mjs` — Dataset scatterplot with annotations
-- `hist-control.mjs` — Variable control histogram
-
-### Venn Diagrams
-- `venn2.mjs` — Two-set Venn diagram
-- `venn3.mjs` — Three-set Venn diagram
 
 ## References
 
