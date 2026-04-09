@@ -1,0 +1,28 @@
+version: 1
+project:
+  title: SticiGui Widgets
+  description: Interactive statistics visualizations
+  github: https://github.com/sticigui/sticigui-widgets
+  toc:
+    - file: index.md
+    - file: widgets/binhist.md
+    - file: widgets/confidence-intervals.md
+    - file: widgets/correlation.md
+    - file: widgets/distribution-viewer.md
+    - file: widgets/histogram.md
+    - file: widgets/hist-control.md
+    - file: widgets/lln.md
+    - file: widgets/norm-approx.md
+    - file: widgets/prob-calc.md
+    - file: widgets/sampling-dist.md
+    - file: widgets/scatterplot.md
+    - file: widgets/stats-calc.md
+    - file: widgets/venn2.md
+    - file: widgets/venn3.md
+    - file: datasets.md
+  
+site:
+  template: book-theme
+  title: SticiGui Interactive Widgets
+  options:
+    folders: true

@@ -1,0 +1,19 @@
+{
+  "name": "myst-example-sticigui-widgets",
+  "version": "1.0.0",
+  "description": "MyST example site demonstrating interactive statistics widgets",
+  "scripts": {
+    "clean": "rm -rf _build"
+  },
+  "keywords": [
+    "myst",
+    "anywidget",
+    "statistics",
+    "education",
+    "interactive"
+  ],
+  "license": "MIT",
+  "devDependencies": {
+    "mystmd": "^1.1.0"
+  }
+}

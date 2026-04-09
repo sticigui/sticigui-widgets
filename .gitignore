@@ -1,0 +1,15 @@
+# Dependencies
+node_modules/
+
+# Build outputs
+widgets/*/dist/
+*.log
+
+# Documentation build
+docs/_build/
+
+# Temporary files
+*.bak
+session-*.md
+
+*.bak

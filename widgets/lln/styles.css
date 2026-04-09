@@ -1,0 +1,249 @@
+/**
+ * Widget Styles - Light and Dark Mode Support
+ * 
+ * This stylesheet provides default styling for all widgets with automatic
+ * dark mode support using CSS custom properties and the .dark class.
+ */
+
+/* ============================================
+   CSS Custom Properties (Variables)
+   ============================================ */
+
+/* Light mode (default) */
+:root {
+  --widget-text-primary: #000000;
+  --widget-text-secondary: #57534e;
+  --widget-bg-primary: #ffffff;
+  --widget-bg-secondary: #f5f5f4;
+  --widget-border-light: #d6d3d1;
+  --widget-border-dark: #44403c;
+  --widget-accent: #ea580c;
+  --widget-primary: #0ea5e9;
+  --widget-primary-highlight: #f97316;
+  --widget-chart-line: #dc2626;
+}
+
+/* Dark mode - triggered by .dark class on html or ancestor */
+.dark {
+  --widget-text-primary: #e7e5e4;
+  --widget-text-secondary: #a8a29e;
+  --widget-bg-primary: #1c1917;
+  --widget-bg-secondary: #292524;
+  --widget-border-light: #57534e;
+  --widget-border-dark: #a8a29e;
+  --widget-accent: #fb923c;
+  --widget-primary: #38bdf8;
+  --widget-primary-highlight: #fb923c;
+  --widget-chart-line: #f87171;
+}
+
+/* System preference fallback */
+@media (prefers-color-scheme: dark) {
+  :root:not(.light) {
+    --widget-text-primary: #e7e5e4;
+    --widget-text-secondary: #a8a29e;
+    --widget-bg-primary: #1c1917;
+    --widget-bg-secondary: #292524;
+    --widget-border-light: #57534e;
+    --widget-border-dark: #a8a29e;
+    --widget-accent: #fb923c;
+    --widget-primary: #38bdf8;
+    --widget-primary-highlight: #fb923c;
+    --widget-chart-line: #f87171;
+  }
+}
+
+/* ============================================
+   Base Widget Styles
+   ============================================ */
+
+.widget-container {
+  font-family: system-ui, -apple-system, sans-serif;
+  padding: 20px;
+  max-width: 800px;
+}
+
+.widget-title {
+  margin: 0 0 15px 0;
+  color: var(--widget-text-primary);
+}
+
+/* ============================================
+   Controls & Forms
+   ============================================ */
+
+.widget-controls {
+  margin-bottom: 15px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 15px;
+  align-items: center;
+}
+
+.widget-input-group {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.widget-label {
+  font-size: 14px;
+  color: var(--widget-text-primary);
+}
+
+.widget-input {
+  padding: 4px 8px;
+  font-size: 14px;
+  border: 1px solid var(--widget-border-light);
+  border-radius: 4px;
+  background-color: var(--widget-bg-primary);
+  color: var(--widget-text-primary);
+}
+
+.widget-input[type="number"] {
+  width: 80px;
+}
+
+.widget-input[type="text"] {
+  width: 120px;
+}
+
+.widget-select {
+  padding: 4px 8px;
+  font-size: 14px;
+  border: 1px solid var(--widget-border-light);
+  border-radius: 4px;
+  background-color: var(--widget-bg-primary);
+  color: var(--widget-text-primary);
+}
+
+/* ============================================
+   Buttons
+   ============================================ */
+
+.widget-button {
+  padding: 6px 12px;
+  font-size: 14px;
+  border: 1px solid var(--widget-border-light);
+  border-radius: 4px;
+  background-color: var(--widget-bg-primary);
+  color: var(--widget-text-primary);
+  cursor: pointer;
+}
+
+.widget-button-primary {
+  background-color: var(--widget-primary);
+  color: white;
+  font-weight: bold;
+  border-color: var(--widget-primary);
+}
+
+.widget-button-accent {
+  background-color: var(--widget-accent);
+  color: white;
+  border-color: var(--widget-accent);
+}
+
+.widget-button-secondary {
+  background-color: var(--widget-bg-secondary);
+  color: var(--widget-text-primary);
+  border-color: var(--widget-border-light);
+}
+
+.widget-button:hover {
+  opacity: 0.9;
+}
+
+.widget-button.active {
+  background-color: var(--widget-accent);
+  color: white;
+  border-color: var(--widget-accent);
+}
+
+/* ============================================
+   Display Elements
+   ============================================ */
+
+.widget-display {
+  font-size: 16px;
+  font-weight: bold;
+  color: var(--widget-text-primary);
+  margin-bottom: 15px;
+}
+
+.widget-summary {
+  margin-bottom: 1rem;
+  font-size: 0.875rem;
+  color: var(--widget-text-primary);
+}
+
+/* ============================================
+   Chart Container & SVG Elements
+   ============================================ */
+
+.widget-chart-container {
+  width: 100%;
+  height: 400px;
+}
+
+.widget-chart-svg {
+  width: 100%;
+  height: 100%;
+  background-color: var(--widget-bg-primary);
+}
+
+/* Axis elements */
+.axis-label {
+  fill: var(--widget-text-primary);
+}
+
+.axis-text {
+  fill: var(--widget-text-primary);
+}
+
+.axis-line {
+  stroke: var(--widget-border-dark);
+}
+
+.axis-tick line {
+  stroke: var(--widget-border-dark);
+}
+
+/* Chart bars */
+.chart-bar {
+  fill: var(--widget-primary);
+  stroke: var(--widget-border-dark);
+  stroke-width: 0.5;
+}
+
+.chart-bar-highlight {
+  fill: var(--widget-primary-highlight);
+  stroke: var(--widget-border-dark);
+  stroke-width: 0.5;
+}
+
+/* Chart lines */
+.chart-line {
+  stroke: var(--widget-chart-line);
+}
+
+/* ============================================
+   Checkbox
+   ============================================ */
+
+.widget-checkbox {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+}
+
+.widget-checkbox input[type="checkbox"] {
+  cursor: pointer;
+}
+
+.widget-checkbox label {
+  font-size: 0.875rem;
+  color: var(--widget-text-primary);
+  cursor: pointer;
+}
+

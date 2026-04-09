@@ -1,0 +1,23 @@
+{
+  "name": "sticicgui-widgets",
+  "version": "0.1.0",
+  "type": "module",
+  "scripts": {
+    "build": "node scripts/build-all.mjs",
+    "build:watch": "node scripts/build-all.mjs --watch",
+    "test": "node --experimental-vm-modules node_modules/.bin/vitest run"
+  },
+  "devDependencies": {
+    "esbuild": "^0.25.0",
+    "jsdom": "^29.0.1",
+    "vitest": "^1.0.0"
+  },
+  "dependencies": {
+    "d3-array": "^3.0.0",
+    "d3-axis": "^3.0.0",
+    "d3-scale": "^4.0.0",
+    "d3-selection": "^3.0.0",
+    "d3-shape": "^3.0.0",
+    "jstat": "^1.9.6"
+  }
+}
