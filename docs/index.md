@@ -8,9 +8,7 @@ This repository contains a collection of interactive widgets to help the reader 
 
 - Interactively adjust parameters and see results update in real-time
 - Built with ES modules, D3.js, and web standards
-- Keyboard navigable with proper ARIA labels
 - Seeded random number generators for consistent results
-- Automatically adapt to light/dark mode
 
 ## Using the Widgets
 
