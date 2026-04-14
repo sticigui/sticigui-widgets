@@ -524,6 +524,27 @@ export function render({ model, el }) {
     
     svg.appendChild(highlightGroup);
     
+
+    // Draw Universal Set S bounding box and label
+    const sBox = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+    sBox.setAttribute('x', '2');
+    sBox.setAttribute('y', '2');
+    sBox.setAttribute('width', geom.width - 4);
+    sBox.setAttribute('height', geom.height - 4);
+    sBox.setAttribute('fill', 'none');
+    sBox.setAttribute('stroke', getCSSVar('--widget-border-dark'));
+    sBox.setAttribute('stroke-width', '1');
+    svg.appendChild(sBox);
+    
+    const sLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    sLabel.setAttribute('x', '10');
+    sLabel.setAttribute('y', '20');
+    sLabel.setAttribute('fill', getCSSVar('--widget-text-primary'));
+    sLabel.setAttribute('font-size', '16');
+    sLabel.setAttribute('font-weight', 'bold');
+    sLabel.textContent = 'S';
+    svg.appendChild(sLabel);
+
     // Draw circles (outline only)
     const circleA = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
     circleA.setAttribute('cx', geom.xA);
