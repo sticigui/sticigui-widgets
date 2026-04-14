@@ -10,8 +10,8 @@ description: Visualize and analyze bivariate data with regression tools
     "ccv": "../../public-data/ccv.json",
     "gmat": "../../public-data/gmat.json"
   },
-  "x_var": "unemployment_rate",
-  "y_var": "homeless_rate",
+  "x_var": "Population (1000s)",
+  "y_var": "Unemployed per 1000",
   "show_regression": true,
   "show_residuals": false,
   "show_graph_of_averages": false,
