@@ -10,7 +10,6 @@ description: Create histograms from data with adjustable bin width
     "ccv": "../../public-data/ccv.json",
     "gmat": "../../public-data/gmat.json"
   },
-  "xLabel": "Value",
   "bins": 10,
   "show_normal": false
 }

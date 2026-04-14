@@ -189,6 +189,16 @@ async function render({ model, el }) {
     container.appendChild(titleEl);
   }
 
+  // Helper to determine an appropriate step size for inputs based on the data range
+  function getOptimalStep(dataArray) {
+    if (!dataArray || dataArray.length === 0) return '0.1';
+    const range = Math.max(...dataArray) - Math.min(...dataArray);
+    if (range === 0) return '0.1';
+    const step = Math.pow(10, Math.floor(Math.log10(range)) - 2);
+    // Limit precision to avoid floating point representation issues in the input step attribute
+    return step.toPrecision(1).replace(/\.0+e/, 'e');
+  }
+
   // Create controls container
   const controls = document.createElement('div');
   controls.className = 'widget-controls';
@@ -264,7 +274,7 @@ async function render({ model, el }) {
   loInput.className = 'widget-input';
   loInput.type = 'number';
   loInput.value = lo;
-  loInput.step = '0.00001';
+  loInput.step = getOptimalStep(data);
   loInput.setAttribute('aria-label', 'Area from');
   loGroup.appendChild(loLabel);
   loGroup.appendChild(loInput);
@@ -279,7 +289,7 @@ async function render({ model, el }) {
   hiInput.className = 'widget-input';
   hiInput.type = 'number';
   hiInput.value = hi;
-  hiInput.step = '0.00001';
+  hiInput.step = getOptimalStep(data);
   hiInput.setAttribute('aria-label', 'Area to');
   hiGroup.appendChild(hiLabel);
   hiGroup.appendChild(hiInput);
@@ -569,6 +579,11 @@ async function render({ model, el }) {
     const range = dataMax - dataMin;
     lo = dataMin + range * 0.25;
     hi = dataMax - range * 0.25;
+    
+    const newStep = getOptimalStep(data);
+    loInput.step = newStep;
+    hiInput.step = newStep;
+    
     loInput.value = lo.toFixed(5).replace(/\.?0+$/, '');
     hiInput.value = hi.toFixed(5).replace(/\.?0+$/, '');
     
@@ -585,6 +600,11 @@ async function render({ model, el }) {
     const range = dataMax - dataMin;
     lo = dataMin + range * 0.25;
     hi = dataMax - range * 0.25;
+    
+    const newStep = getOptimalStep(data);
+    loInput.step = newStep;
+    hiInput.step = newStep;
+    
     loInput.value = lo.toFixed(5).replace(/\.?0+$/, '');
     hiInput.value = hi.toFixed(5).replace(/\.?0+$/, '');
     
