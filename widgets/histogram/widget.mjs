@@ -51,9 +51,15 @@ function renderHistogram(svg, width, height, data, numBins, lo, hi, xLabel) {
     .range([0, innerWidth]);
 
   // Compute bins explicitly against the x-scale
+  // To force exactly `numBins` bins, we calculate the thresholds manually
+  const domainMin = xScale.domain()[0];
+  const domainMax = xScale.domain()[1];
+  const step = (domainMax - domainMin) / numBins;
+  const thresholds = Array.from({length: numBins - 1}, (_, i) => domainMin + (i + 1) * step);
+
   const binGenerator = bin()
     .domain(xScale.domain())
-    .thresholds(xScale.ticks(numBins));
+    .thresholds(thresholds);
   
   const bins = binGenerator(data);
 
