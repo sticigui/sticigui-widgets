@@ -41,7 +41,7 @@ export async function render({ model, el }) {
   let hi = model.get('hi') !== undefined ? model.get('hi') : null;
   let showNormal = model.get('show_normal') || false;
   let showFull = model.get('show_full') !== undefined ? model.get('show_full') : true;
-  let showRestricted = model.get('show_restricted') !== undefined ? model.get('show_restricted') : true;
+  let showRestricted = model.get('show_restricted') !== undefined ? model.get('show_restricted') : advanced;
   let restrictions = model.get('restrictions') || [];
   
   // Load data from URL, inline array, or object with named datasets
@@ -138,7 +138,7 @@ export async function render({ model, el }) {
   // Lo input
   const loGroup = document.createElement('div');
   loGroup.className = 'widget-input-group';
-  if (!advanced) controls1.appendChild(loGroup);
+  controls1.appendChild(loGroup);
   const loLabel = document.createElement('label');
   loLabel.className = 'widget-label';
   loLabel.textContent = 'Area from:';
@@ -153,7 +153,7 @@ export async function render({ model, el }) {
   // Hi input
   const hiGroup = document.createElement('div');
   hiGroup.className = 'widget-input-group';
-  if (!advanced) controls1.appendChild(hiGroup);
+  controls1.appendChild(hiGroup);
   const hiLabel = document.createElement('label');
   hiLabel.className = 'widget-label';
   hiLabel.textContent = 'Area to:';
@@ -260,7 +260,7 @@ export async function render({ model, el }) {
   const propDisplay = document.createElement('div');
   propDisplay.className = 'widget-summary';
   propDisplay.setAttribute('data-testid', 'prop-display');
-  if (!advanced) container.appendChild(propDisplay);
+  container.appendChild(propDisplay);
 
   
   // Chart container
@@ -482,7 +482,7 @@ export async function render({ model, el }) {
     const firstVar = variables[0];
     const values = firstVar ? data.map(row => parseFloat(row[firstVar])).filter(v => !isNaN(v)) : [];
 
-    if (!advanced && values.length > 0) {
+    if (values.length > 0) {
       const dataMin = Math.min(...values);
       const dataMax = Math.max(...values);
       const range = dataMax - dataMin;
@@ -516,14 +516,6 @@ export async function render({ model, el }) {
    * Get restricted dataset
    */
   function getRestrictedData() {
-    if (!advanced && lo !== null && hi !== null) {
-      return data.filter(row => {
-        const val = parseFloat(row[variable]);
-        if (isNaN(val)) return false;
-        return val >= lo && val <= hi;
-      });
-    }
-
     const result = data.filter(row => {
 
       return restrictions.every(r => {
@@ -612,15 +604,29 @@ export async function render({ model, el }) {
     
     stats.textContent = text;
 
-    if (!advanced && propDisplay) {
-      const prop = fullValues.length > 0 ? restrictedValues.length / fullValues.length : 0;
-      propDisplay.textContent = `Selected area: ${(prop * 100).toFixed(2)}% (${restrictedValues.length}/${fullValues.length} values)`;
-      stats.style.display = 'none'; // hide normal stats in simple mode
-    } else if (advanced) {
-      if (propDisplay) propDisplay.style.display = 'none';
+    if (propDisplay && lo !== null && hi !== null) {
+      const getHighlightedCount = (vals) => vals.filter(v => v >= lo && v <= hi).length;
+      
+      const fullHigh = getHighlightedCount(fullValues);
+      const fullProp = fullValues.length > 0 ? fullHigh / fullValues.length : 0;
+      let propText = advanced 
+        ? `Selected area (Full): ${(fullProp * 100).toFixed(2)}% (${fullHigh}/${fullValues.length} values)`
+        : `Selected area: ${(fullProp * 100).toFixed(2)}% (${fullHigh}/${fullValues.length} values)`;
+
+      if (advanced && restrictedValues.length > 0 && restrictedValues.length !== fullValues.length) {
+        const restHigh = getHighlightedCount(restrictedValues);
+        const restProp = restrictedValues.length > 0 ? restHigh / restrictedValues.length : 0;
+        propText += ` | Selected area (Restricted): ${(restProp * 100).toFixed(2)}% (${restHigh}/${restrictedValues.length} values)`;
+      }
+      
+      propDisplay.textContent = propText;
+    }
+    
+    if (!advanced) {
+      stats.style.display = 'none';
+    } else {
       stats.style.display = 'block';
     }
-
   }
   
   /**
@@ -688,7 +694,8 @@ export async function render({ model, el }) {
         rect.setAttribute('y', yScale(bin.count));
         rect.setAttribute('width', Math.max(1, xScale(bin.end) - xScale(bin.start) - 1));
         rect.setAttribute('height', margin.top + chartHeight - yScale(bin.count));
-        rect.setAttribute('fill', primaryColor);
+        const isHighlighted = lo !== null && hi !== null && bin.mid >= lo && bin.mid <= hi;
+        rect.setAttribute('fill', isHighlighted ? accentColor : primaryColor);
         rect.setAttribute('fill-opacity', '0.6');
         rect.setAttribute('stroke', borderColor);
         rect.setAttribute('stroke-width', '1');
@@ -705,7 +712,8 @@ export async function render({ model, el }) {
         rect.setAttribute('y', yScale(bin.count));
         rect.setAttribute('width', Math.max(1, xScale(bin.end) - xScale(bin.start) - 1));
         rect.setAttribute('height', margin.top + chartHeight - yScale(bin.count));
-        rect.setAttribute('fill', '#22c55e'); // Greenish color to distinguish from primary
+        const isHighlighted = lo !== null && hi !== null && bin.mid >= lo && bin.mid <= hi;
+        rect.setAttribute('fill', isHighlighted ? '#d946ef' : '#22c55e'); // Magenta when highlighted, green otherwise
         rect.setAttribute('fill-opacity', '0.6');
         rect.setAttribute('stroke', borderColor);
         rect.setAttribute('stroke-width', '1');
@@ -944,7 +952,7 @@ export async function render({ model, el }) {
     model.set('variable', variable);
     const values = data.map(row => parseFloat(row[variable])).filter(v => !isNaN(v));
     
-    if (!advanced && values.length > 0) {
+    if (values.length > 0) {
       const dataMin = Math.min(...values);
       const dataMax = Math.max(...values);
       const range = dataMax - dataMin;
