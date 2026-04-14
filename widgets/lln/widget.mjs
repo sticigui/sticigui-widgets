@@ -85,14 +85,14 @@ export function render({ model, el }) {
   pGroup.className = 'widget-input-group';
   const pLabel = document.createElement('label');
   pLabel.className = 'widget-label';
-  pLabel.textContent = 'Success probability (p):';
+  pLabel.textContent = 'Chances of success (%):';
   const pInput = document.createElement('input');
   pInput.className = 'widget-input';
   pInput.type = 'number';
-  pInput.value = p;
+  pInput.value = p * 100;
   pInput.min = '0';
-  pInput.max = '1';
-  pInput.step = '0.01';
+  pInput.max = '100';
+  pInput.step = '1';
   pInput.setAttribute('data-testid', 'p-input');
   pGroup.appendChild(pLabel);
   pGroup.appendChild(pInput);
@@ -306,8 +306,8 @@ export function render({ model, el }) {
   
   pInput.addEventListener('input', () => {
     const value = parseFloat(pInput.value);
-    if (!isNaN(value) && value >= 0 && value <= 1) {
-      p = value;
+    if (!isNaN(value) && value >= 0 && value <= 100) {
+      p = value / 100;
       model.set('p', p);
       differences = null; // Clear results when parameters change
       renderChart();
