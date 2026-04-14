@@ -112,6 +112,10 @@ export function render({ model, el }) {
   let pac = model.get('pac') || 0.12;
   let pbc = model.get('pbc') || 0.10;
   let pabc = model.get('pabc') || 0.05;
+
+  // Coordinates for circles (initialize on first render)
+  let coords = null;
+
   let highlight = model.get('highlight') || 'ABC';
   
   // Ensure valid probabilities
@@ -188,15 +192,8 @@ export function render({ model, el }) {
   // P(A) slider
   const paSlider = createSlider('P(A):', pa, 'pa-slider', (newValue) => {
     pa = newValue;
-    pab = Math.min(pab, pa, pb);
-    pac = Math.min(pac, pa, pc);
-    pabc = Math.min(pabc, pab, pac, pbc);
-    
     model.set('pa', pa);
-    model.set('pab', pab);
-    model.set('pac', pac);
-    model.set('pabc', pabc);
-    
+    if (coords) updateProbsFromCoords();
     renderVenn();
     updateProbDisplay();
   });
@@ -205,15 +202,8 @@ export function render({ model, el }) {
   // P(B) slider
   const pbSlider = createSlider('P(B):', pb, 'pb-slider', (newValue) => {
     pb = newValue;
-    pab = Math.min(pab, pa, pb);
-    pbc = Math.min(pbc, pb, pc);
-    pabc = Math.min(pabc, pab, pac, pbc);
-    
     model.set('pb', pb);
-    model.set('pab', pab);
-    model.set('pbc', pbc);
-    model.set('pabc', pabc);
-    
+    if (coords) updateProbsFromCoords();
     renderVenn();
     updateProbDisplay();
   });
@@ -222,69 +212,13 @@ export function render({ model, el }) {
   // P(C) slider
   const pcSlider = createSlider('P(C):', pc, 'pc-slider', (newValue) => {
     pc = newValue;
-    pac = Math.min(pac, pa, pc);
-    pbc = Math.min(pbc, pb, pc);
-    pabc = Math.min(pabc, pab, pac, pbc);
-    
     model.set('pc', pc);
-    model.set('pac', pac);
-    model.set('pbc', pbc);
-    model.set('pabc', pabc);
-    
+    if (coords) updateProbsFromCoords();
     renderVenn();
     updateProbDisplay();
   });
   controls.appendChild(pcSlider.group);
   
-  // P(A∩B) slider
-  const pabSlider = createSlider('P(A∩B):', pab, 'pab-slider', (newValue) => {
-    pab = Math.min(newValue, pa, pb);
-    pabc = Math.min(pabc, pab, pac, pbc);
-    
-    model.set('pab', pab);
-    model.set('pabc', pabc);
-    
-    renderVenn();
-    updateProbDisplay();
-  });
-  controls.appendChild(pabSlider.group);
-  
-  // P(A∩C) slider
-  const pacSlider = createSlider('P(A∩C):', pac, 'pac-slider', (newValue) => {
-    pac = Math.min(newValue, pa, pc);
-    pabc = Math.min(pabc, pab, pac, pbc);
-    
-    model.set('pac', pac);
-    model.set('pabc', pabc);
-    
-    renderVenn();
-    updateProbDisplay();
-  });
-  controls.appendChild(pacSlider.group);
-  
-  // P(B∩C) slider
-  const pbcSlider = createSlider('P(B∩C):', pbc, 'pbc-slider', (newValue) => {
-    pbc = Math.min(newValue, pb, pc);
-    pabc = Math.min(pabc, pab, pac, pbc);
-    
-    model.set('pbc', pbc);
-    model.set('pabc', pabc);
-    
-    renderVenn();
-    updateProbDisplay();
-  });
-  controls.appendChild(pbcSlider.group);
-  
-  // P(A∩B∩C) slider
-  const pabcSlider = createSlider('P(A∩B∩C):', pabc, 'pabc-slider', (newValue) => {
-    pabc = Math.min(newValue, pab, pac, pbc);
-    
-    model.set('pabc', pabc);
-    
-    renderVenn();
-    updateProbDisplay();
-  });
-  controls.appendChild(pabcSlider.group);
   
   container.appendChild(controls);
   
@@ -378,54 +312,89 @@ export function render({ model, el }) {
    * Compute circle positions and radii
    * Circles are arranged in an equilateral triangle
    */
+
+  let currentGeom = null;
+
   function computeGeometry() {
     const rect = svgContainer.getBoundingClientRect();
-    const width = rect.width;
-    const height = rect.height;
+    const width = rect.width || 500;
+    const height = rect.height || 500;
     const padding = 40;
     
     const availableWidth = width - 2 * padding;
     const availableHeight = height - 2 * padding;
     const maxDim = Math.min(availableWidth, availableHeight);
     
-    // Scale factor: map probabilities to radii
-    // Area = π * r² = C² * p, so r = C * √p
-    // Area of S is roughly proportional to the box.
-    // If P(A)=1, it should fill most of the box.
     const C = maxDim / 2.2;
-    
     const rA = C * Math.sqrt(pa);
     const rB = C * Math.sqrt(pb);
     const rC = C * Math.sqrt(pc);
     
-    // Find distances between centers using intersection areas
-    const targetAreaAB = C * C * pab;
-    const targetAreaAC = C * C * pac;
-    const targetAreaBC = C * C * pbc;
+    if (!coords) {
+      // Initial equilateral triangle
+      const targetAreaAB = C * C * pab;
+      const targetAreaAC = C * C * pac;
+      const targetAreaBC = C * C * pbc;
+      
+      const dAB = findDistanceForIntersection(rA, rB, targetAreaAB);
+      const dAC = findDistanceForIntersection(rA, rC, targetAreaAC);
+      const dBC = findDistanceForIntersection(rB, rC, targetAreaBC);
+      
+      const centerX = width / 2;
+      const centerY = height / 2;
+      const avgDist = (dAB + dAC + dBC) / 3;
+      const triangleHeight = avgDist * Math.sqrt(3) / 2;
+      
+      coords = {
+        xA: centerX,
+        yA: centerY - triangleHeight * 0.5,
+        xB: centerX - avgDist / 2,
+        yB: centerY + triangleHeight * 0.5,
+        xC: centerX + avgDist / 2,
+        yC: centerY + triangleHeight * 0.5
+      };
+    }
     
-    const dAB = findDistanceForIntersection(rA, rB, targetAreaAB);
-    const dAC = findDistanceForIntersection(rA, rC, targetAreaAC);
-    const dBC = findDistanceForIntersection(rB, rC, targetAreaBC);
+    currentGeom = { 
+      rA, rB, rC, 
+      xA: coords.xA, yA: coords.yA, 
+      xB: coords.xB, yB: coords.yB, 
+      xC: coords.xC, yC: coords.yC, 
+      width, height, C 
+    };
+    return currentGeom;
+  }
+
+  function get3CircleIntersectionArea(geom) {
+    // Fast numerical approximation (Monte Carlo)
+    const { xA, yA, rA, xB, yB, rB, xC, yC, rC } = geom;
     
-    // Position circles in equilateral triangle arrangement
-    // A at top, B at bottom-left, C at bottom-right
-    const centerX = width / 2;
-    const centerY = height / 2;
+    // Bounding box of intersection
+    const minX = Math.max(xA - rA, xB - rB, xC - rC);
+    const maxX = Math.min(xA + rA, xB + rB, xC + rC);
+    const minY = Math.max(yA - rA, yB - rB, yC - rC);
+    const maxY = Math.min(yA + rA, yB + rB, yC + rC);
     
-    // Compute triangle height based on average distance
-    const avgDist = (dAB + dAC + dBC) / 3;
-    const triangleHeight = avgDist * Math.sqrt(3) / 2;
+    if (minX >= maxX || minY >= maxY) return 0;
     
-    const xA = centerX;
-    const yA = centerY - triangleHeight * 0.5;
+    const N = 10000;
+    let hits = 0;
+    const w = maxX - minX;
+    const h = maxY - minY;
     
-    const xB = centerX - avgDist / 2;
-    const yB = centerY + triangleHeight * 0.5;
+    // Fixed seed for stable display if needed, but random is fine for fast display
+    for (let i = 0; i < N; i++) {
+      const px = minX + Math.random() * w;
+      const py = minY + Math.random() * h;
+      
+      if ((px - xA)**2 + (py - yA)**2 <= rA**2 &&
+          (px - xB)**2 + (py - yB)**2 <= rB**2 &&
+          (px - xC)**2 + (py - yC)**2 <= rC**2) {
+        hits++;
+      }
+    }
     
-    const xC = centerX + avgDist / 2;
-    const yC = centerY + triangleHeight * 0.5;
-    
-    return { rA, rB, rC, xA, yA, xB, yB, xC, yC, width, height };
+    return (w * h) * (hits / N);
   }
   
   /**
@@ -797,9 +766,104 @@ export function render({ model, el }) {
   updateProbDisplay();
   updateButtons();
   
+  // Drag handling
+  let dragging = null;
+  let dragOffset = { x: 0, y: 0 };
+  
+  function handleMouseDown(e) {
+    if (!currentGeom) return;
+    const rect = svg.getBoundingClientRect();
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
+    
+    const distA = Math.hypot(x - coords.xA, y - coords.yA);
+    const distB = Math.hypot(x - coords.xB, y - coords.yB);
+    const distC = Math.hypot(x - coords.xC, y - coords.yC);
+    
+    // Determine which circle was clicked. If overlapping, arbitrary priority C > B > A.
+    let clicked = null;
+    let minDist = Infinity;
+    
+    if (distC <= currentGeom.rC) { clicked = 'C'; minDist = distC; }
+    if (distB <= currentGeom.rB && (clicked === null || distB < minDist)) { clicked = 'B'; minDist = distB; }
+    if (distA <= currentGeom.rA && (clicked === null || distA < minDist)) { clicked = 'A'; minDist = distA; }
+    
+    if (clicked) {
+      dragging = clicked;
+      dragOffset = { x: x - coords[`x${clicked}`], y: y - coords[`y${clicked}`] };
+      e.preventDefault(); // Prevent text selection while dragging
+    }
+  }
+  
+  function handleMouseMove(e) {
+    if (!dragging || !currentGeom) {
+      if (currentGeom) {
+        const rect = svg.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const distA = Math.hypot(x - coords.xA, y - coords.yA);
+        const distB = Math.hypot(x - coords.xB, y - coords.yB);
+        const distC = Math.hypot(x - coords.xC, y - coords.yC);
+        
+        if (distA <= currentGeom.rA || distB <= currentGeom.rB || distC <= currentGeom.rC) {
+          svg.style.cursor = 'grab';
+        } else {
+          svg.style.cursor = 'default';
+        }
+      }
+      return;
+    }
+    svg.style.cursor = 'grabbing';
+    const rect = svg.getBoundingClientRect();
+    const x = e.clientX - rect.left - dragOffset.x;
+    const y = e.clientY - rect.top - dragOffset.y;
+    
+    coords[`x${dragging}`] = x;
+    coords[`y${dragging}`] = y;
+    
+    updateProbsFromCoords();
+    renderVenn();
+    updateProbDisplay();
+  }
+  
+  function handleMouseUp() {
+    dragging = null;
+  }
+  
+  function updateProbsFromCoords() {
+    const geom = computeGeometry();
+    const C2 = geom.C * geom.C;
+    
+    const dAB = Math.hypot(coords.xA - coords.xB, coords.yA - coords.yB);
+    const dAC = Math.hypot(coords.xA - coords.xC, coords.yA - coords.yC);
+    const dBC = Math.hypot(coords.xB - coords.xC, coords.yB - coords.yC);
+    
+    const areaAB = circleIntersectionArea(geom.rA, geom.rB, dAB);
+    const areaAC = circleIntersectionArea(geom.rA, geom.rC, dAC);
+    const areaBC = circleIntersectionArea(geom.rB, geom.rC, dBC);
+    
+    pab = Math.max(0, Math.min(pa, pb, areaAB / C2));
+    pac = Math.max(0, Math.min(pa, pc, areaAC / C2));
+    pbc = Math.max(0, Math.min(pb, pc, areaBC / C2));
+    
+    const areaABC = get3CircleIntersectionArea(geom);
+    pabc = Math.max(0, Math.min(pab, pac, pbc, areaABC / C2));
+    
+    model.set('pab', pab);
+    model.set('pac', pac);
+    model.set('pbc', pbc);
+    model.set('pabc', pabc);
+  }
+
+  svg.addEventListener('mousedown', handleMouseDown);
+  window.addEventListener('mousemove', handleMouseMove);
+  window.addEventListener('mouseup', handleMouseUp);
+  
   // Cleanup
   return () => {
-    // No global event listeners in this version
+    svg.removeEventListener('mousedown', handleMouseDown);
+    window.removeEventListener('mousemove', handleMouseMove);
+    window.removeEventListener('mouseup', handleMouseUp);
   };
 }
 
