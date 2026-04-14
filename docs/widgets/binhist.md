@@ -9,6 +9,7 @@ description: Interactive visualization of the binomial distribution
   "p": 0.5,
   "lo": 5,
   "hi": 15,
+  "curve_points": 200,
   "show_normal": false
 }
 ```

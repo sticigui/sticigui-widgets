@@ -46,9 +46,10 @@ export default {
     let lo = model.get('lo') !== undefined ? model.get('lo') : 3;
     let hi = model.get('hi') !== undefined ? model.get('hi') : 7;
     let showNormal = model.get('show_normal') || false;
+    let curvePoints = model.get('curve_points') || 200;
     let title = model.get('title');
     
-    console.log('[binhist] initial state', { n, p, lo, hi, showNormal });
+    console.log('[binhist] initial state', { n, p, lo, hi, showNormal, curvePoints });
 
     // Validate and constrain initial values
     n = Math.max(1, Math.min(200, Math.floor(n)));
@@ -111,6 +112,10 @@ export default {
     // Create hi input
     const hiInput = createInput('to:', 'number', hi, 0, n, 1);
     controls.appendChild(hiInput.wrapper);
+
+    // Create curve_points input
+    const curvePointsInput = createInput('Curve Points:', 'number', curvePoints, 10, 1000, 10);
+    controls.appendChild(curvePointsInput.wrapper);
 
     // Create normal curve toggle
     const normalToggle = document.createElement('button');
@@ -260,10 +265,16 @@ export default {
         const stdDev = Math.sqrt(n * p * (1 - p));
         const points = [];
 
-        for (let k = 0; k <= n; k++) {
-          const x = k;
+        // Generate a smooth curve with many points across the x-axis range
+        const numPoints = curvePoints;
+        const xMin = -0.5;
+        const xMax = n + 0.5;
+        const step = (xMax - xMin) / numPoints;
+
+        for (let i = 0; i <= numPoints; i++) {
+          const x = xMin + i * step;
           const y = normalPDF(x, mean, stdDev);
-          points.push({ x, y: y * maxProb / normalPDF(mean, mean, stdDev) }); // Scale to match histogram
+          points.push({ x, y }); 
         }
 
         const lineGen = line()
@@ -325,6 +336,14 @@ export default {
       hi = newHi;
       hiInput.input.value = hi;
       model.set('hi', hi);
+      updateChart();
+    });
+
+    curvePointsInput.input.addEventListener('change', () => {
+      const newPoints = Math.max(10, Math.min(1000, Math.floor(parseFloat(curvePointsInput.input.value) || 200)));
+      curvePoints = newPoints;
+      curvePointsInput.input.value = curvePoints;
+      model.set('curve_points', curvePoints);
       updateChart();
     });
 
