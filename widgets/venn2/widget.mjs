@@ -277,8 +277,8 @@ export function render({ model, el }) {
     // Scale factor: map probabilities to radii
     // Area = π * r² = C² * p, so r = C * √p
     // Handle edge case where both pa and pb are very small
-    const sumSqrt = Math.sqrt(pa) + Math.sqrt(pb);
-    const C = sumSqrt > 0.01 ? maxDim / (2 * sumSqrt) : maxDim / 0.02;
+    // Constant scale relative to the universal set
+    const C = maxDim / 2.2;
     
     const rA = C * Math.sqrt(Math.max(0.0001, pa));
     const rB = C * Math.sqrt(Math.max(0.0001, pb));
@@ -360,8 +360,8 @@ export function render({ model, el }) {
       rect.setAttribute('y', '0');
       rect.setAttribute('width', geom.width);
       rect.setAttribute('height', geom.height);
-      rect.setAttribute('fill', 'yellow');
-      rect.setAttribute('fill-opacity', '0.5');
+      rect.setAttribute('fill', '#fbbf24');
+      rect.setAttribute('fill-opacity', '0.75');
       rect.setAttribute('clip-path', 'url(#clipA)');
       highlightGroup.appendChild(rect);
     } else if (highlight === 'B') {
@@ -371,8 +371,8 @@ export function render({ model, el }) {
       rect.setAttribute('y', '0');
       rect.setAttribute('width', geom.width);
       rect.setAttribute('height', geom.height);
-      rect.setAttribute('fill', 'yellow');
-      rect.setAttribute('fill-opacity', '0.5');
+      rect.setAttribute('fill', '#fbbf24');
+      rect.setAttribute('fill-opacity', '0.75');
       rect.setAttribute('clip-path', 'url(#clipB)');
       highlightGroup.appendChild(rect);
     } else if (highlight === 'AB') {
@@ -384,8 +384,8 @@ export function render({ model, el }) {
       rect.setAttribute('y', '0');
       rect.setAttribute('width', geom.width);
       rect.setAttribute('height', geom.height);
-      rect.setAttribute('fill', 'yellow');
-      rect.setAttribute('fill-opacity', '0.5');
+      rect.setAttribute('fill', '#fbbf24');
+      rect.setAttribute('fill-opacity', '0.75');
       rect.setAttribute('clip-path', 'url(#clipB)');
       g.appendChild(rect);
       highlightGroup.appendChild(g);
@@ -396,8 +396,8 @@ export function render({ model, el }) {
       rectA.setAttribute('y', '0');
       rectA.setAttribute('width', geom.width);
       rectA.setAttribute('height', geom.height);
-      rectA.setAttribute('fill', 'yellow');
-      rectA.setAttribute('fill-opacity', '0.5');
+      rectA.setAttribute('fill', '#fbbf24');
+      rectA.setAttribute('fill-opacity', '0.75');
       rectA.setAttribute('clip-path', 'url(#clipA)');
       highlightGroup.appendChild(rectA);
       
@@ -406,8 +406,8 @@ export function render({ model, el }) {
       rectB.setAttribute('y', '0');
       rectB.setAttribute('width', geom.width);
       rectB.setAttribute('height', geom.height);
-      rectB.setAttribute('fill', 'yellow');
-      rectB.setAttribute('fill-opacity', '0.5');
+      rectB.setAttribute('fill', '#fbbf24');
+      rectB.setAttribute('fill-opacity', '0.75');
       rectB.setAttribute('clip-path', 'url(#clipB)');
       highlightGroup.appendChild(rectB);
     } else if (highlight === 'AcB') {
@@ -435,8 +435,8 @@ export function render({ model, el }) {
       rect.setAttribute('y', '0');
       rect.setAttribute('width', geom.width);
       rect.setAttribute('height', geom.height);
-      rect.setAttribute('fill', 'yellow');
-      rect.setAttribute('fill-opacity', '0.5');
+      rect.setAttribute('fill', '#fbbf24');
+      rect.setAttribute('fill-opacity', '0.75');
       g.appendChild(rect);
       
       // Subtract A from B by clipping
@@ -458,8 +458,8 @@ export function render({ model, el }) {
       rect.setAttribute('y', '0');
       rect.setAttribute('width', geom.width);
       rect.setAttribute('height', geom.height);
-      rect.setAttribute('fill', 'yellow');
-      rect.setAttribute('fill-opacity', '0.5');
+      rect.setAttribute('fill', '#fbbf24');
+      rect.setAttribute('fill-opacity', '0.75');
       g.appendChild(rect);
       
       const maskB = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
@@ -478,8 +478,8 @@ export function render({ model, el }) {
       rect.setAttribute('y', '0');
       rect.setAttribute('width', geom.width);
       rect.setAttribute('height', geom.height);
-      rect.setAttribute('fill', 'yellow');
-      rect.setAttribute('fill-opacity', '0.5');
+      rect.setAttribute('fill', '#fbbf24');
+      rect.setAttribute('fill-opacity', '0.75');
       highlightGroup.appendChild(rect);
       
       // Subtract A by drawing white circle on top
@@ -497,8 +497,8 @@ export function render({ model, el }) {
       rect.setAttribute('y', '0');
       rect.setAttribute('width', geom.width);
       rect.setAttribute('height', geom.height);
-      rect.setAttribute('fill', 'yellow');
-      rect.setAttribute('fill-opacity', '0.5');
+      rect.setAttribute('fill', '#fbbf24');
+      rect.setAttribute('fill-opacity', '0.75');
       highlightGroup.appendChild(rect);
       
       // Subtract B by drawing white circle on top
@@ -516,8 +516,8 @@ export function render({ model, el }) {
       rect.setAttribute('y', '0');
       rect.setAttribute('width', geom.width);
       rect.setAttribute('height', geom.height);
-      rect.setAttribute('fill', 'yellow');
-      rect.setAttribute('fill-opacity', '0.5');
+      rect.setAttribute('fill', '#fbbf24');
+      rect.setAttribute('fill-opacity', '0.75');
       highlightGroup.appendChild(rect);
     }
     // empty is not highlighted

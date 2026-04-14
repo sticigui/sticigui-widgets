@@ -390,8 +390,9 @@ export function render({ model, el }) {
     
     // Scale factor: map probabilities to radii
     // Area = π * r² = C² * p, so r = C * √p
-    const sumSqrt = Math.sqrt(pa) + Math.sqrt(pb) + Math.sqrt(pc);
-    const C = maxDim / (2.5 * sumSqrt);
+    // Area of S is roughly proportional to the box.
+    // If P(A)=1, it should fill most of the box.
+    const C = maxDim / 2.2;
     
     const rA = C * Math.sqrt(pa);
     const rB = C * Math.sqrt(pb);
@@ -654,63 +655,63 @@ export function render({ model, el }) {
     }
 
     if (highlight === 'A') {
-      fillMaskedRect(createMask(['clipA'], []), 'yellow', '0.5');
+      fillMaskedRect(createMask(['clipA'], []), '#fbbf24', '0.75');
     } else if (highlight === 'B') {
-      fillMaskedRect(createMask(['clipB'], []), 'yellow', '0.5');
+      fillMaskedRect(createMask(['clipB'], []), '#fbbf24', '0.75');
     } else if (highlight === 'C') {
-      fillMaskedRect(createMask(['clipC'], []), 'yellow', '0.5');
+      fillMaskedRect(createMask(['clipC'], []), '#fbbf24', '0.75');
     } else if (highlight === 'Ac') {
-      fillMaskedRect(createMask([], ['clipA']), 'yellow', '0.5');
+      fillMaskedRect(createMask([], ['clipA']), '#fbbf24', '0.75');
     } else if (highlight === 'Bc') {
-      fillMaskedRect(createMask([], ['clipB']), 'yellow', '0.5');
+      fillMaskedRect(createMask([], ['clipB']), '#fbbf24', '0.75');
     } else if (highlight === 'Cc') {
-      fillMaskedRect(createMask([], ['clipC']), 'yellow', '0.5');
+      fillMaskedRect(createMask([], ['clipC']), '#fbbf24', '0.75');
     } else if (highlight === 'AB') {
-      fillMaskedRect(createMask(['clipA', 'clipB'], []), 'yellow', '0.5');
+      fillMaskedRect(createMask(['clipA', 'clipB'], []), '#fbbf24', '0.75');
     } else if (highlight === 'AC') {
-      fillMaskedRect(createMask(['clipA', 'clipC'], []), 'yellow', '0.5');
+      fillMaskedRect(createMask(['clipA', 'clipC'], []), '#fbbf24', '0.75');
     } else if (highlight === 'BC') {
-      fillMaskedRect(createMask(['clipB', 'clipC'], []), 'yellow', '0.5');
+      fillMaskedRect(createMask(['clipB', 'clipC'], []), '#fbbf24', '0.75');
     } else if (highlight === 'AorB') {
-      fillMaskedRect(createUnionMask(['clipA', 'clipB']), 'yellow', '0.5');
+      fillMaskedRect(createUnionMask(['clipA', 'clipB']), '#fbbf24', '0.75');
     } else if (highlight === 'AorC') {
-      fillMaskedRect(createUnionMask(['clipA', 'clipC']), 'yellow', '0.5');
+      fillMaskedRect(createUnionMask(['clipA', 'clipC']), '#fbbf24', '0.75');
     } else if (highlight === 'BorC') {
-      fillMaskedRect(createUnionMask(['clipB', 'clipC']), 'yellow', '0.5');
+      fillMaskedRect(createUnionMask(['clipB', 'clipC']), '#fbbf24', '0.75');
     } else if (highlight === 'ABC') {
-      fillMaskedRect(createMask(['clipA', 'clipB', 'clipC'], []), 'yellow', '0.5');
+      fillMaskedRect(createMask(['clipA', 'clipB', 'clipC'], []), '#fbbf24', '0.75');
     } else if (highlight === 'AorBorC') {
-      fillMaskedRect(createUnionMask(['clipA', 'clipB', 'clipC']), 'yellow', '0.5');
+      fillMaskedRect(createUnionMask(['clipA', 'clipB', 'clipC']), '#fbbf24', '0.75');
     } else if (highlight === 'ABc') {
-      fillMaskedRect(createMask(['clipA'], ['clipB']), 'yellow', '0.5');
+      fillMaskedRect(createMask(['clipA'], ['clipB']), '#fbbf24', '0.75');
     } else if (highlight === 'AcB') {
-      fillMaskedRect(createMask(['clipB'], ['clipA']), 'yellow', '0.5');
+      fillMaskedRect(createMask(['clipB'], ['clipA']), '#fbbf24', '0.75');
     } else if (highlight === 'AcBC') {
-      fillMaskedRect(createMask(['clipB', 'clipC'], ['clipA']), 'yellow', '0.5');
+      fillMaskedRect(createMask(['clipB', 'clipC'], ['clipA']), '#fbbf24', '0.75');
     } else if (highlight === 'AcorBC') {
-      fillMaskedRect(createAcorBCMask(), 'yellow', '0.5');
+      fillMaskedRect(createAcorBCMask(), '#fbbf24', '0.75');
     } else if (highlight === 'S') {
-      fillMaskedRect(createMask([], []), 'yellow', '0.5');
+      fillMaskedRect(createMask([], []), '#fbbf24', '0.75');
     } else if (highlight === 'empty') {
       // empty is not highlighted
     } else if (highlight === 'PA_B') {
       fillMaskedRect(createMask(['clipB'], []), 'cyan', '0.5');
-      fillMaskedRect(createMask(['clipA', 'clipB'], []), 'yellow', '0.5');
+      fillMaskedRect(createMask(['clipA', 'clipB'], []), '#fbbf24', '0.75');
     } else if (highlight === 'PAc_B') {
       fillMaskedRect(createMask(['clipB'], []), 'cyan', '0.5');
-      fillMaskedRect(createMask(['clipB'], ['clipA']), 'yellow', '0.5');
+      fillMaskedRect(createMask(['clipB'], ['clipA']), '#fbbf24', '0.75');
     } else if (highlight === 'PB_A') {
       fillMaskedRect(createMask(['clipA'], []), 'cyan', '0.5');
-      fillMaskedRect(createMask(['clipA', 'clipB'], []), 'yellow', '0.5');
+      fillMaskedRect(createMask(['clipA', 'clipB'], []), '#fbbf24', '0.75');
     } else if (highlight === 'PA_BC') {
       fillMaskedRect(createMask(['clipB', 'clipC'], []), 'cyan', '0.5');
-      fillMaskedRect(createMask(['clipA', 'clipB', 'clipC'], []), 'yellow', '0.5');
+      fillMaskedRect(createMask(['clipA', 'clipB', 'clipC'], []), '#fbbf24', '0.75');
     } else if (highlight === 'PAc_BC') {
       fillMaskedRect(createMask(['clipB', 'clipC'], []), 'cyan', '0.5');
-      fillMaskedRect(createMask(['clipB', 'clipC'], ['clipA']), 'yellow', '0.5');
+      fillMaskedRect(createMask(['clipB', 'clipC'], ['clipA']), '#fbbf24', '0.75');
     } else if (highlight === 'PA_BorC') {
       fillMaskedRect(createUnionMask(['clipB', 'clipC']), 'cyan', '0.5');
-      fillMaskedRect(createIntersectionUnionMask('clipA', ['clipB', 'clipC']), 'yellow', '0.5');
+      fillMaskedRect(createIntersectionUnionMask('clipA', ['clipB', 'clipC']), '#fbbf24', '0.75');
     }
     
     svg.appendChild(highlightGroup);
