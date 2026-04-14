@@ -259,10 +259,21 @@ export async function render({ model, el }) {
     
     // Set default variables if not set or if current variables don't exist in new dataset
     if ((!xVar || !variables.includes(xVar)) && variables.length > 0) {
-      xVar = variables[0];
+      const initialXVar = model.get('x_var');
+      // Use model's initial if valid, else fallback
+      if (initialXVar && variables.includes(initialXVar)) {
+        xVar = initialXVar;
+      } else {
+        xVar = variables[0];
+      }
     }
     if ((!yVar || !variables.includes(yVar)) && variables.length > 1) {
-      yVar = variables[1];
+      const initialYVar = model.get('y_var');
+      if (initialYVar && variables.includes(initialYVar)) {
+        yVar = initialYVar;
+      } else {
+        yVar = variables[1];
+      }
     }
     
     updateVariableSelectors();
