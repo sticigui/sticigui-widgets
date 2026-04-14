@@ -106,14 +106,6 @@ export function render({ model, el }) {
   modeButton.setAttribute('aria-label', `Toggle between count and proportion difference (currently ${mode})`);
   controls.appendChild(modeButton);
   
-  // Run button
-  const runButton = document.createElement('button');
-  runButton.className = 'widget-button widget-button-primary';
-  runButton.textContent = 'Run';
-  runButton.setAttribute('data-testid', 'run-button');
-  runButton.setAttribute('aria-label', 'Run simulation');
-  controls.appendChild(runButton);
-  
   container.appendChild(controls);
   
   // Chart container
@@ -299,8 +291,7 @@ export function render({ model, el }) {
     if (!isNaN(value) && value >= 10 && value <= 10000) {
       n = value;
       model.set('n', n);
-      differences = null; // Clear results when parameters change
-      renderChart();
+      runSimulation();
     }
   });
   
@@ -309,8 +300,7 @@ export function render({ model, el }) {
     if (!isNaN(value) && value >= 0 && value <= 100) {
       p = value / 100;
       model.set('p', p);
-      differences = null; // Clear results when parameters change
-      renderChart();
+      runSimulation();
     }
   });
   
@@ -320,16 +310,7 @@ export function render({ model, el }) {
     modeButton.setAttribute('aria-label', `Toggle between count and proportion difference (currently ${mode})`);
     model.set('mode', mode);
     
-    // Re-calculate differences with new mode if simulation has been run
-    if (differences) {
-      runSimulation();
-    }
-  });
-  
-  runButton.addEventListener('click', () => {
-    // Increment seed for new random sequence
-    seed = seed + 1;
-    model.set('seed', seed);
+    // Re-calculate differences with new mode
     runSimulation();
   });
   
@@ -337,7 +318,7 @@ export function render({ model, el }) {
   el.appendChild(container);
   
   // Initial render
-  renderChart();
+  runSimulation();
   
   // Cleanup
   return () => {};
