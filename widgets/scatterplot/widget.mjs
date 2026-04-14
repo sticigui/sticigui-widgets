@@ -455,8 +455,8 @@ export async function render({ model, el }) {
       });
     }
     
-    // Draw SD Line
-    if (showSDLine) {
+    // Draw SD Line (meaningless in residual plot since r=0)
+    if (showSDLine && !showResiduals) {
       const slope = sy / sx;
       const x1 = xDomain[0];
       const y1 = my + slope * (x1 - mx);
@@ -535,7 +535,7 @@ export async function render({ model, el }) {
     }
 
     // Draw graph of averages (drawn after data points to appear on top)
-    if (showGraphOfAverages && !showResiduals) {
+    if (showGraphOfAverages) {
       // Use the actual data bounds rather than the padded domain for binning
       const numBins = 10;
       const binWidth = (xMax - xMin) / numBins;
