@@ -1,402 +1,402 @@
 [
   {
-    "city": "Miami FL",
-    "homeless_rate": 15.9,
-    "homeless_count": 5950,
-    "unemployment_rate": 7.5,
-    "population": 372,
-    "vacancy_rate": 7
+    "City": "Miami FL",
+    "Homeless per 1000": 15.9,
+    "No. of Homeless": 5950,
+    "Unemployed per 1000": 7.5,
+    "Population (1000s)": 372,
+    "Vacancies per 1000": 7
   },
   {
-    "city": "St. Louis MO",
-    "homeless_rate": 11.6,
-    "homeless_count": 5000,
-    "unemployment_rate": 8.4,
-    "population": 429,
-    "vacancy_rate": 8.5
+    "City": "St. Louis MO",
+    "Homeless per 1000": 11.6,
+    "No. of Homeless": 5000,
+    "Unemployed per 1000": 8.4,
+    "Population (1000s)": 429,
+    "Vacancies per 1000": 8.5
   },
   {
-    "city": "San Francisco CA",
-    "homeless_rate": 11.5,
-    "homeless_count": 8250,
-    "unemployment_rate": 6,
-    "population": 712,
-    "vacancy_rate": 1.6
+    "City": "San Francisco CA",
+    "Homeless per 1000": 11.5,
+    "No. of Homeless": 8250,
+    "Unemployed per 1000": 6,
+    "Population (1000s)": 712,
+    "Vacancies per 1000": 1.6
   },
   {
-    "city": "Worcester MA",
-    "homeless_rate": 10.6,
-    "homeless_count": 1700,
-    "unemployment_rate": 3.7,
-    "population": 160,
-    "vacancy_rate": 3
+    "City": "Worcester MA",
+    "Homeless per 1000": 10.6,
+    "No. of Homeless": 1700,
+    "Unemployed per 1000": 3.7,
+    "Population (1000s)": 160,
+    "Vacancies per 1000": 3
   },
   {
-    "city": "Los Angeles CA",
-    "homeless_rate": 10.5,
-    "homeless_count": 32600,
-    "unemployment_rate": 7.9,
-    "population": 3097,
-    "vacancy_rate": 2.2
+    "City": "Los Angeles CA",
+    "Homeless per 1000": 10.5,
+    "No. of Homeless": 32600,
+    "Unemployed per 1000": 7.9,
+    "Population (1000s)": 3097,
+    "Vacancies per 1000": 2.2
   },
   {
-    "city": "Santa Monica CA",
-    "homeless_rate": 10.2,
-    "homeless_count": 900,
-    "unemployment_rate": 7,
-    "population": 88,
-    "vacancy_rate": 1.8
+    "City": "Santa Monica CA",
+    "Homeless per 1000": 10.2,
+    "No. of Homeless": 900,
+    "Unemployed per 1000": 7,
+    "Population (1000s)": 88,
+    "Vacancies per 1000": 1.8
   },
   {
-    "city": "Newark NJ",
-    "homeless_rate": 9.5,
-    "homeless_count": 3000,
-    "unemployment_rate": 5.9,
-    "population": 314,
-    "vacancy_rate": 2.3
+    "City": "Newark NJ",
+    "Homeless per 1000": 9.5,
+    "No. of Homeless": 3000,
+    "Unemployed per 1000": 5.9,
+    "Population (1000s)": 314,
+    "Vacancies per 1000": 2.3
   },
   {
-    "city": "Hartford CT",
-    "homeless_rate": 8.8,
-    "homeless_count": 1200,
-    "unemployment_rate": 7.1,
-    "population": 136,
-    "vacancy_rate": 2.6
+    "City": "Hartford CT",
+    "Homeless per 1000": 8.8,
+    "No. of Homeless": 1200,
+    "Unemployed per 1000": 7.1,
+    "Population (1000s)": 136,
+    "Vacancies per 1000": 2.6
   },
   {
-    "city": "Washington DC",
-    "homeless_rate": 7.5,
-    "homeless_count": 4700,
-    "unemployment_rate": 8.4,
-    "population": 623,
-    "vacancy_rate": 2
+    "City": "Washington DC",
+    "Homeless per 1000": 7.5,
+    "No. of Homeless": 4700,
+    "Unemployed per 1000": 8.4,
+    "Population (1000s)": 623,
+    "Vacancies per 1000": 2
   },
   {
-    "city": "Detroit MI",
-    "homeless_rate": 6.8,
-    "homeless_count": 7500,
-    "unemployment_rate": 9.1,
-    "population": 1088,
-    "vacancy_rate": 5.4
+    "City": "Detroit MI",
+    "Homeless per 1000": 6.8,
+    "No. of Homeless": 7500,
+    "Unemployed per 1000": 9.1,
+    "Population (1000s)": 1088,
+    "Vacancies per 1000": 5.4
   },
   {
-    "city": "Yonkers NY",
-    "homeless_rate": 6.8,
-    "homeless_count": 1300,
-    "unemployment_rate": 4.9,
-    "population": 191,
-    "vacancy_rate": 2.1
+    "City": "Yonkers NY",
+    "Homeless per 1000": 6.8,
+    "No. of Homeless": 1300,
+    "Unemployed per 1000": 4.9,
+    "Population (1000s)": 191,
+    "Vacancies per 1000": 2.1
   },
   {
-    "city": "Chicago IL",
-    "homeless_rate": 6.6,
-    "homeless_count": 19800,
-    "unemployment_rate": 8.3,
-    "population": 2992,
-    "vacancy_rate": 6
+    "City": "Chicago IL",
+    "Homeless per 1000": 6.6,
+    "No. of Homeless": 19800,
+    "Unemployed per 1000": 8.3,
+    "Population (1000s)": 2992,
+    "Vacancies per 1000": 6
   },
   {
-    "city": "Seattle WA",
-    "homeless_rate": 6.5,
-    "homeless_count": 3200,
-    "unemployment_rate": 6.6,
-    "population": 488,
-    "vacancy_rate": 5.5
+    "City": "Seattle WA",
+    "Homeless per 1000": 6.5,
+    "No. of Homeless": 3200,
+    "Unemployed per 1000": 6.6,
+    "Population (1000s)": 488,
+    "Vacancies per 1000": 5.5
   },
   {
-    "city": "Las Vegas NV",
-    "homeless_rate": 6,
-    "homeless_count": 1100,
-    "unemployment_rate": 8.9,
-    "population": 183,
-    "vacancy_rate": 9
+    "City": "Las Vegas NV",
+    "Homeless per 1000": 6,
+    "No. of Homeless": 1100,
+    "Unemployed per 1000": 8.9,
+    "Population (1000s)": 183,
+    "Vacancies per 1000": 9
   },
   {
-    "city": "Boston MA",
-    "homeless_rate": 5.6,
-    "homeless_count": 3200,
-    "unemployment_rate": 4.6,
-    "population": 571,
-    "vacancy_rate": 2.6
+    "City": "Boston MA",
+    "Homeless per 1000": 5.6,
+    "No. of Homeless": 3200,
+    "Unemployed per 1000": 4.6,
+    "Population (1000s)": 571,
+    "Vacancies per 1000": 2.6
   },
   {
-    "city": "Richmond VA",
-    "homeless_rate": 5.3,
-    "homeless_count": 1175,
-    "unemployment_rate": 5.3,
-    "population": 219,
-    "vacancy_rate": 5.5
+    "City": "Richmond VA",
+    "Homeless per 1000": 5.3,
+    "No. of Homeless": 1175,
+    "Unemployed per 1000": 5.3,
+    "Population (1000s)": 219,
+    "Vacancies per 1000": 5.5
   },
   {
-    "city": "New York NY",
-    "homeless_rate": 5,
-    "homeless_count": 36000,
-    "unemployment_rate": 7.4,
-    "population": 7165,
-    "vacancy_rate": 2.2
+    "City": "New York NY",
+    "Homeless per 1000": 5,
+    "No. of Homeless": 36000,
+    "Unemployed per 1000": 7.4,
+    "Population (1000s)": 7165,
+    "Vacancies per 1000": 2.2
   },
   {
-    "city": "Dallas-Fort Worth TX",
-    "homeless_rate": 5,
-    "homeless_count": 7000,
-    "unemployment_rate": 4.7,
-    "population": 1388,
-    "vacancy_rate": 16
+    "City": "Dallas-Fort Worth TX",
+    "Homeless per 1000": 5,
+    "No. of Homeless": 7000,
+    "Unemployed per 1000": 4.7,
+    "Population (1000s)": 1388,
+    "Vacancies per 1000": 16
   },
   {
-    "city": "Denver CO",
-    "homeless_rate": 4.9,
-    "homeless_count": 2500,
-    "unemployment_rate": 5,
-    "population": 504,
-    "vacancy_rate": 14
+    "City": "Denver CO",
+    "Homeless per 1000": 4.9,
+    "No. of Homeless": 2500,
+    "Unemployed per 1000": 5,
+    "Population (1000s)": 504,
+    "Vacancies per 1000": 14
   },
   {
-    "city": "Charleston WV",
-    "homeless_rate": 4.7,
-    "homeless_count": 300,
-    "unemployment_rate": 10.7,
-    "population": 63,
-    "vacancy_rate": 5.9
+    "City": "Charleston WV",
+    "Homeless per 1000": 4.7,
+    "No. of Homeless": 300,
+    "Unemployed per 1000": 10.7,
+    "Population (1000s)": 63,
+    "Vacancies per 1000": 5.9
   },
   {
-    "city": "Atlanta GA",
-    "homeless_rate": 4.6,
-    "homeless_count": 2000,
-    "unemployment_rate": 5,
-    "population": 426,
-    "vacancy_rate": 9
+    "City": "Atlanta GA",
+    "Homeless per 1000": 4.6,
+    "No. of Homeless": 2000,
+    "Unemployed per 1000": 5,
+    "Population (1000s)": 426,
+    "Vacancies per 1000": 9
   },
   {
-    "city": "Fort Wayne IN",
-    "homeless_rate": 4.3,
-    "homeless_count": 725,
-    "unemployment_rate": 6.3,
-    "population": 165,
-    "vacancy_rate": 9.2
+    "City": "Fort Wayne IN",
+    "Homeless per 1000": 4.3,
+    "No. of Homeless": 725,
+    "Unemployed per 1000": 6.3,
+    "Population (1000s)": 165,
+    "Vacancies per 1000": 9.2
   },
   {
-    "city": "Portland OR",
-    "homeless_rate": 4.2,
-    "homeless_count": 1550,
-    "unemployment_rate": 7.4,
-    "population": 366,
-    "vacancy_rate": 5.5
+    "City": "Portland OR",
+    "Homeless per 1000": 4.2,
+    "No. of Homeless": 1550,
+    "Unemployed per 1000": 7.4,
+    "Population (1000s)": 366,
+    "Vacancies per 1000": 5.5
   },
   {
-    "city": "Houston TX",
-    "homeless_rate": 3.7,
-    "homeless_count": 6400,
-    "unemployment_rate": 8.4,
-    "population": 1706,
-    "vacancy_rate": 17
+    "City": "Houston TX",
+    "Homeless per 1000": 3.7,
+    "No. of Homeless": 6400,
+    "Unemployed per 1000": 8.4,
+    "Population (1000s)": 1706,
+    "Vacancies per 1000": 17
   },
   {
-    "city": "San Diego CA",
-    "homeless_rate": 3.1,
-    "homeless_count": 3000,
-    "unemployment_rate": 5.3,
-    "population": 960,
-    "vacancy_rate": 5.3
+    "City": "San Diego CA",
+    "Homeless per 1000": 3.1,
+    "No. of Homeless": 3000,
+    "Unemployed per 1000": 5.3,
+    "Population (1000s)": 960,
+    "Vacancies per 1000": 5.3
   },
   {
-    "city": "Salt Lake City UT",
-    "homeless_rate": 3.1,
-    "homeless_count": 525,
-    "unemployment_rate": 6.3,
-    "population": 165,
-    "vacancy_rate": 14.5
+    "City": "Salt Lake City UT",
+    "Homeless per 1000": 3.1,
+    "No. of Homeless": 525,
+    "Unemployed per 1000": 6.3,
+    "Population (1000s)": 165,
+    "Vacancies per 1000": 14.5
   },
   {
-    "city": "Little Rock AR",
-    "homeless_rate": 2.9,
-    "homeless_count": 500,
-    "unemployment_rate": 5.8,
-    "population": 170,
-    "vacancy_rate": 6.5
+    "City": "Little Rock AR",
+    "Homeless per 1000": 2.9,
+    "No. of Homeless": 500,
+    "Unemployed per 1000": 5.8,
+    "Population (1000s)": 170,
+    "Vacancies per 1000": 6.5
   },
   {
-    "city": "New Orleans LA",
-    "homeless_rate": 2.8,
-    "homeless_count": 1600,
-    "unemployment_rate": 11,
-    "population": 559,
-    "vacancy_rate": 18
+    "City": "New Orleans LA",
+    "Homeless per 1000": 2.8,
+    "No. of Homeless": 1600,
+    "Unemployed per 1000": 11,
+    "Population (1000s)": 559,
+    "Vacancies per 1000": 18
   },
   {
-    "city": "Charleston SC",
-    "homeless_rate": 2.8,
-    "homeless_count": 200,
-    "unemployment_rate": 4.4,
-    "population": 69,
-    "vacancy_rate": 9
+    "City": "Charleston SC",
+    "Homeless per 1000": 2.8,
+    "No. of Homeless": 200,
+    "Unemployed per 1000": 4.4,
+    "Population (1000s)": 69,
+    "Vacancies per 1000": 9
   },
   {
-    "city": "Albuquerque NM",
-    "homeless_rate": 2.8,
-    "homeless_count": 1000,
-    "unemployment_rate": 6.3,
-    "population": 351,
-    "vacancy_rate": 9.7
+    "City": "Albuquerque NM",
+    "Homeless per 1000": 2.8,
+    "No. of Homeless": 1000,
+    "Unemployed per 1000": 6.3,
+    "Population (1000s)": 351,
+    "Vacancies per 1000": 9.7
   },
   {
-    "city": "Tucson AZ",
-    "homeless_rate": 2.7,
-    "homeless_count": 1000,
-    "unemployment_rate": 5.3,
-    "population": 365,
-    "vacancy_rate": 12
+    "City": "Tucson AZ",
+    "Homeless per 1000": 2.7,
+    "No. of Homeless": 1000,
+    "Unemployed per 1000": 5.3,
+    "Population (1000s)": 365,
+    "Vacancies per 1000": 12
   },
   {
-    "city": "Burlington VT",
-    "homeless_rate": 2.7,
-    "homeless_count": 100,
-    "unemployment_rate": 3.4,
-    "population": 37,
-    "vacancy_rate": 6
+    "City": "Burlington VT",
+    "Homeless per 1000": 2.7,
+    "No. of Homeless": 100,
+    "Unemployed per 1000": 3.4,
+    "Population (1000s)": 37,
+    "Vacancies per 1000": 6
   },
   {
-    "city": "Baltimore MD",
-    "homeless_rate": 2.4,
-    "homeless_count": 1900,
-    "unemployment_rate": 7,
-    "population": 763,
-    "vacancy_rate": 8.6
+    "City": "Baltimore MD",
+    "Homeless per 1000": 2.4,
+    "No. of Homeless": 1900,
+    "Unemployed per 1000": 7,
+    "Population (1000s)": 763,
+    "Vacancies per 1000": 8.6
   },
   {
-    "city": "Cincinnati OH",
-    "homeless_rate": 2.3,
-    "homeless_count": 875,
-    "unemployment_rate": 7.2,
-    "population": 370,
-    "vacancy_rate": 8.5
+    "City": "Cincinnati OH",
+    "Homeless per 1000": 2.3,
+    "No. of Homeless": 875,
+    "Unemployed per 1000": 7.2,
+    "Population (1000s)": 370,
+    "Vacancies per 1000": 8.5
   },
   {
-    "city": "Syracuse NY",
-    "homeless_rate": 2.3,
-    "homeless_count": 380,
-    "unemployment_rate": 6.7,
-    "population": 164,
-    "vacancy_rate": 9.5
+    "City": "Syracuse NY",
+    "Homeless per 1000": 2.3,
+    "No. of Homeless": 380,
+    "Unemployed per 1000": 6.7,
+    "Population (1000s)": 164,
+    "Vacancies per 1000": 9.5
   },
   {
-    "city": "Tampa FL",
-    "homeless_rate": 2.3,
-    "homeless_count": 650,
-    "unemployment_rate": 5,
-    "population": 275,
-    "vacancy_rate": 14.7
+    "City": "Tampa FL",
+    "Homeless per 1000": 2.3,
+    "No. of Homeless": 650,
+    "Unemployed per 1000": 5,
+    "Population (1000s)": 275,
+    "Vacancies per 1000": 14.7
   },
   {
-    "city": "Pittsburgh PA",
-    "homeless_rate": 2.2,
-    "homeless_count": 900,
-    "unemployment_rate": 9.4,
-    "population": 403,
-    "vacancy_rate": 5.8
+    "City": "Pittsburgh PA",
+    "Homeless per 1000": 2.2,
+    "No. of Homeless": 900,
+    "Unemployed per 1000": 9.4,
+    "Population (1000s)": 403,
+    "Vacancies per 1000": 5.8
   },
   {
-    "city": "Philadelphia PA",
-    "homeless_rate": 2.1,
-    "homeless_count": 3600,
-    "unemployment_rate": 7,
-    "population": 1646,
-    "vacancy_rate": 4
+    "City": "Philadelphia PA",
+    "Homeless per 1000": 2.1,
+    "No. of Homeless": 3600,
+    "Unemployed per 1000": 7,
+    "Population (1000s)": 1646,
+    "Vacancies per 1000": 4
   },
   {
-    "city": "Birmingham AL",
-    "homeless_rate": 2,
-    "homeless_count": 584,
-    "unemployment_rate": 7.2,
-    "population": 280,
-    "vacancy_rate": 7.1
+    "City": "Birmingham AL",
+    "Homeless per 1000": 2,
+    "No. of Homeless": 584,
+    "Unemployed per 1000": 7.2,
+    "Population (1000s)": 280,
+    "Vacancies per 1000": 7.1
   },
   {
-    "city": "Louisville KY",
-    "homeless_rate": 1.9,
-    "homeless_count": 575,
-    "unemployment_rate": 6.7,
-    "population": 290,
-    "vacancy_rate": 7.3
+    "City": "Louisville KY",
+    "Homeless per 1000": 1.9,
+    "No. of Homeless": 575,
+    "Unemployed per 1000": 6.7,
+    "Population (1000s)": 290,
+    "Vacancies per 1000": 7.3
   },
   {
-    "city": "Grand Rapids MI",
-    "homeless_rate": 1.9,
-    "homeless_count": 350,
-    "unemployment_rate": 8.6,
-    "population": 183,
-    "vacancy_rate": 7.5
+    "City": "Grand Rapids MI",
+    "Homeless per 1000": 1.9,
+    "No. of Homeless": 350,
+    "Unemployed per 1000": 8.6,
+    "Population (1000s)": 183,
+    "Vacancies per 1000": 7.5
   },
   {
-    "city": "Minneapolis-St.Paul MN",
-    "homeless_rate": 1.6,
-    "homeless_count": 1000,
-    "unemployment_rate": 4.5,
-    "population": 624,
-    "vacancy_rate": 6.1
+    "City": "Minneapolis-St.Paul MN",
+    "Homeless per 1000": 1.6,
+    "No. of Homeless": 1000,
+    "Unemployed per 1000": 4.5,
+    "Population (1000s)": 624,
+    "Vacancies per 1000": 6.1
   },
   {
-    "city": "Milwaukee WI",
-    "homeless_rate": 1.6,
-    "homeless_count": 1000,
-    "unemployment_rate": 6.4,
-    "population": 621,
-    "vacancy_rate": 6
+    "City": "Milwaukee WI",
+    "Homeless per 1000": 1.6,
+    "No. of Homeless": 1000,
+    "Unemployed per 1000": 6.4,
+    "Population (1000s)": 621,
+    "Vacancies per 1000": 6
   },
   {
-    "city": "Providence RI",
-    "homeless_rate": 1.6,
-    "homeless_count": 250,
-    "unemployment_rate": 4.9,
-    "population": 157,
-    "vacancy_rate": 5
+    "City": "Providence RI",
+    "Homeless per 1000": 1.6,
+    "No. of Homeless": 250,
+    "Unemployed per 1000": 4.9,
+    "Population (1000s)": 157,
+    "Vacancies per 1000": 5
   },
   {
-    "city": "Cleveland OH",
-    "homeless_rate": 1.4,
-    "homeless_count": 800,
-    "unemployment_rate": 12.4,
-    "population": 547,
-    "vacancy_rate": 6.5
+    "City": "Cleveland OH",
+    "Homeless per 1000": 1.4,
+    "No. of Homeless": 800,
+    "Unemployed per 1000": 12.4,
+    "Population (1000s)": 547,
+    "Vacancies per 1000": 6.5
   },
   {
-    "city": "Phoenix AZ",
-    "homeless_rate": 1.2,
-    "homeless_count": 1050,
-    "unemployment_rate": 5.1,
-    "population": 853,
-    "vacancy_rate": 12.2
+    "City": "Phoenix AZ",
+    "Homeless per 1000": 1.2,
+    "No. of Homeless": 1050,
+    "Unemployed per 1000": 5.1,
+    "Population (1000s)": 853,
+    "Vacancies per 1000": 12.2
   },
   {
-    "city": "Kansas City MO",
-    "homeless_rate": 0.9,
-    "homeless_count": 400,
-    "unemployment_rate": 4.6,
-    "population": 443,
-    "vacancy_rate": 7.2
+    "City": "Kansas City MO",
+    "Homeless per 1000": 0.9,
+    "No. of Homeless": 400,
+    "Unemployed per 1000": 4.6,
+    "Population (1000s)": 443,
+    "Vacancies per 1000": 7.2
   },
   {
-    "city": "Charlotte NC",
-    "homeless_rate": 0.8,
-    "homeless_count": 275,
-    "unemployment_rate": 3.7,
-    "population": 331,
-    "vacancy_rate": 8.8
+    "City": "Charlotte NC",
+    "Homeless per 1000": 0.8,
+    "No. of Homeless": 275,
+    "Unemployed per 1000": 3.7,
+    "Population (1000s)": 331,
+    "Vacancies per 1000": 8.8
   },
   {
-    "city": "Lincoln NE",
-    "homeless_rate": 0.7,
-    "homeless_count": 135,
-    "unemployment_rate": 3.6,
-    "population": 180,
-    "vacancy_rate": 6.5
+    "City": "Lincoln NE",
+    "Homeless per 1000": 0.7,
+    "No. of Homeless": 135,
+    "Unemployed per 1000": 3.6,
+    "Population (1000s)": 180,
+    "Vacancies per 1000": 6.5
   },
   {
-    "city": "Rochester NY",
-    "homeless_rate": 0.6,
-    "homeless_count": 150,
-    "unemployment_rate": 7,
-    "population": 243,
-    "vacancy_rate": 9
+    "City": "Rochester NY",
+    "Homeless per 1000": 0.6,
+    "No. of Homeless": 150,
+    "Unemployed per 1000": 7,
+    "Population (1000s)": 243,
+    "Vacancies per 1000": 9
   }
 ]
