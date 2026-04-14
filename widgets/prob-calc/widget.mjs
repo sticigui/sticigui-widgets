@@ -221,6 +221,7 @@ export function render({ model, el }) {
   
   // Get initial state
   let title = model.get('title');
+  let presentationMode = model.get('mode') || 'sentence'; // 'sentence' or 'table'
   let distribution = model.get('distribution') || 'normal';
   const initialParams = model.get('params') || {};
   let useLo = model.get('use_lo') !== false;
@@ -250,18 +251,24 @@ export function render({ model, el }) {
   const distGroup = document.createElement('div');
   distGroup.className = 'widget-input-group';
   distGroup.style.marginBottom = '1rem';
-  distGroup.style.display = 'block';
+  distGroup.style.display = presentationMode === 'sentence' ? 'inline-block' : 'block';
   
   const distLabel = document.createElement('label');
   distLabel.className = 'widget-label';
-  distLabel.textContent = 'Distribution: ';
-  distLabel.style.display = 'block';
-  distLabel.style.marginBottom = '0.5rem';
-  distLabel.style.fontWeight = 'bold';
+  if (presentationMode === 'sentence') {
+    distLabel.textContent = 'If X has a ';
+    distLabel.style.display = 'inline';
+    distLabel.style.fontWeight = 'normal';
+  } else {
+    distLabel.textContent = 'Distribution: ';
+    distLabel.style.display = 'block';
+    distLabel.style.marginBottom = '0.5rem';
+    distLabel.style.fontWeight = 'bold';
+  }
   
   const distSelect = document.createElement('select');
   distSelect.className = 'widget-select';
-  distSelect.style.width = '100%';
+  distSelect.style.width = presentationMode === 'sentence' ? 'auto' : '100%';
   distSelect.style.padding = '0.5rem';
   distSelect.style.fontSize = '1rem';
   distSelect.setAttribute('aria-label', 'Distribution');
@@ -276,34 +283,58 @@ export function render({ model, el }) {
   
   distGroup.appendChild(distLabel);
   distGroup.appendChild(distSelect);
+  if (presentationMode === 'sentence') {
+    const distSuffix = document.createElement('span');
+    distSuffix.textContent = ' distribution with ';
+    distGroup.appendChild(distSuffix);
+  }
   container.appendChild(distGroup);
 
   // Parameters container
   const paramsContainer = document.createElement('div');
-  paramsContainer.style.marginBottom = '1rem';
-  paramsContainer.style.padding = '1rem';
-  paramsContainer.style.background = getCSSVar('--widget-bg-secondary');
-  paramsContainer.style.borderRadius = '4px';
+  if (presentationMode === 'table') {
+    paramsContainer.style.marginBottom = '1rem';
+    paramsContainer.style.padding = '1rem';
+    paramsContainer.style.background = getCSSVar('--widget-bg-secondary');
+    paramsContainer.style.borderRadius = '4px';
+  } else {
+    paramsContainer.style.display = 'inline-block';
+  }
   paramsContainer.setAttribute('data-testid', 'params-container');
   container.appendChild(paramsContainer);
 
+  if (presentationMode === 'sentence') {
+    const commaSpan = document.createElement('span');
+    commaSpan.textContent = ', the chance that ';
+    container.appendChild(commaSpan);
+  }
+
   // Bounds container
   const boundsContainer = document.createElement('div');
-  boundsContainer.style.marginBottom = '1rem';
-  boundsContainer.style.padding = '1rem';
-  boundsContainer.style.background = getCSSVar('--widget-bg-secondary');
-  boundsContainer.style.borderRadius = '4px';
-  
-  const boundsTitle = document.createElement('div');
-  boundsTitle.textContent = 'Probability Range';
-  boundsTitle.style.fontWeight = 'bold';
-  boundsTitle.style.marginBottom = '0.75rem';
-  boundsContainer.appendChild(boundsTitle);
+  if (presentationMode === 'table') {
+    boundsContainer.style.marginBottom = '1rem';
+    boundsContainer.style.padding = '1rem';
+    boundsContainer.style.background = getCSSVar('--widget-bg-secondary');
+    boundsContainer.style.borderRadius = '4px';
+    
+    const boundsTitle = document.createElement('div');
+    boundsTitle.textContent = 'Probability Range';
+    boundsTitle.style.fontWeight = 'bold';
+    boundsTitle.style.marginBottom = '0.75rem';
+    boundsContainer.appendChild(boundsTitle);
+  } else {
+    boundsContainer.style.display = 'inline-block';
+    boundsContainer.style.verticalAlign = 'middle';
+  }
   
   // Lower bound
   const loGroup = document.createElement('div');
-  loGroup.style.marginBottom = '0.75rem';
-  loGroup.style.display = 'flex';
+  if (presentationMode === 'table') {
+    loGroup.style.marginBottom = '0.75rem';
+    loGroup.style.display = 'flex';
+  } else {
+    loGroup.style.display = 'inline-flex';
+  }
   loGroup.style.alignItems = 'center';
   loGroup.style.gap = '0.5rem';
   
@@ -313,26 +344,42 @@ export function render({ model, el }) {
   loCheckbox.setAttribute('aria-label', 'Use lower bound');
   
   const loLabel = document.createElement('label');
-  loLabel.textContent = 'Lower bound:';
-  loLabel.style.minWidth = '100px';
+  loLabel.textContent = presentationMode === 'sentence' ? '≤ X ' : 'Lower bound:';
+  if (presentationMode === 'table') loLabel.style.minWidth = '100px';
   
   const loInput = document.createElement('input');
   loInput.className = 'widget-input';
   loInput.type = 'number';
   loInput.value = lo;
   loInput.step = '0.1';
-  loInput.style.flex = '1';
+  if (presentationMode === 'table') {
+    loInput.style.flex = '1';
+  } else {
+    loInput.style.width = '60px';
+  }
   loInput.disabled = !useLo;
   loInput.setAttribute('aria-label', 'Lower bound value');
   
   loGroup.appendChild(loCheckbox);
-  loGroup.appendChild(loLabel);
-  loGroup.appendChild(loInput);
+  if (presentationMode === 'sentence') {
+    loGroup.appendChild(loInput);
+    loGroup.appendChild(loLabel);
+  } else {
+    loGroup.appendChild(loLabel);
+    loGroup.appendChild(loInput);
+  }
   boundsContainer.appendChild(loGroup);
+  
+  if (presentationMode === 'sentence') {
+    const andSpan = document.createElement('span');
+    andSpan.textContent = ' and ';
+    andSpan.style.margin = '0 0.5rem';
+    boundsContainer.appendChild(andSpan);
+  }
   
   // Upper bound
   const hiGroup = document.createElement('div');
-  hiGroup.style.display = 'flex';
+  hiGroup.style.display = presentationMode === 'sentence' ? 'inline-flex' : 'flex';
   hiGroup.style.alignItems = 'center';
   hiGroup.style.gap = '0.5rem';
   
@@ -361,25 +408,52 @@ export function render({ model, el }) {
   
   container.appendChild(boundsContainer);
 
+  if (presentationMode === 'sentence') {
+    const isSpan = document.createElement('span');
+    isSpan.textContent = ' is ';
+    container.appendChild(isSpan);
+  }
+
   // Results container
-  const resultsContainer = document.createElement('div');
-  resultsContainer.style.padding = '1rem';
-  resultsContainer.style.background = getCSSVar('--widget-bg-secondary');
-  resultsContainer.style.borderRadius = '4px';
-  resultsContainer.style.fontSize = '1rem';
+  const resultsContainer = document.createElement(presentationMode === 'table' ? 'div' : 'span');
+  if (presentationMode === 'table') {
+    resultsContainer.style.padding = '1rem';
+    resultsContainer.style.background = getCSSVar('--widget-bg-secondary');
+    resultsContainer.style.borderRadius = '4px';
+    resultsContainer.style.fontSize = '1rem';
+  } else {
+    resultsContainer.style.display = 'inline';
+    resultsContainer.style.fontSize = '1rem';
+  }
   resultsContainer.setAttribute('data-testid', 'results-container');
   
-  const probResult = document.createElement('div');
-  probResult.style.marginBottom = '0.75rem';
-  probResult.style.fontSize = '1.125rem';
-  probResult.style.fontWeight = 'bold';
+  const probResult = document.createElement(presentationMode === 'table' ? 'div' : 'span');
+  if (presentationMode === 'table') {
+    probResult.style.marginBottom = '0.75rem';
+    probResult.style.fontSize = '1.125rem';
+    probResult.style.fontWeight = 'bold';
+  } else {
+    probResult.style.display = 'inline';
+    probResult.style.fontWeight = 'bold';
+  }
   probResult.setAttribute('data-testid', 'prob-result');
   
-  const evResult = document.createElement('div');
-  evResult.style.marginBottom = '0.5rem';
+  const evResult = document.createElement(presentationMode === 'table' ? 'div' : 'span');
+  if (presentationMode === 'table') {
+    evResult.style.marginBottom = '0.5rem';
+  } else {
+    evResult.style.display = 'inline';
+    evResult.style.marginLeft = '0.5rem';
+  }
   evResult.setAttribute('data-testid', 'ev-result');
   
-  const seResult = document.createElement('div');
+  const seResult = document.createElement(presentationMode === 'table' ? 'div' : 'span');
+  if (presentationMode === 'table') {
+    seResult.style.marginBottom = '0';
+  } else {
+    seResult.style.display = 'inline';
+    seResult.style.marginLeft = '0.5rem';
+  }
   seResult.setAttribute('data-testid', 'se-result');
   
   resultsContainer.appendChild(probResult);
@@ -393,15 +467,31 @@ export function render({ model, el }) {
     
     const paramInputs = {};
     
-    DISTRIBUTIONS[distribution].params.forEach(paramDef => {
+    DISTRIBUTIONS[distribution].params.forEach((paramDef, index) => {
       const group = document.createElement('div');
-      group.style.marginBottom = '0.75rem';
+      
+      if (presentationMode === 'table') {
+        group.style.marginBottom = '0.75rem';
+      } else {
+        group.style.display = 'inline-flex';
+        group.style.alignItems = 'center';
+        if (index > 0) {
+          group.style.marginLeft = '0.5rem';
+        }
+      }
       
       const label = document.createElement('label');
       label.className = 'widget-label';
-      label.textContent = paramDef.label;
-      label.style.display = 'block';
-      label.style.marginBottom = '0.25rem';
+      if (presentationMode === 'table') {
+        label.textContent = paramDef.label;
+        label.style.display = 'block';
+        label.style.marginBottom = '0.25rem';
+      } else {
+        label.textContent = paramDef.name + ' = ';
+        label.style.display = 'inline';
+        label.style.marginRight = '0.25rem';
+        label.style.fontWeight = 'normal';
+      }
       
       const input = document.createElement('input');
       input.className = 'widget-input';
@@ -410,7 +500,13 @@ export function render({ model, el }) {
       input.step = paramDef.step || '1';
       if (paramDef.min !== undefined) input.min = paramDef.min;
       if (paramDef.max !== undefined) input.max = paramDef.max;
-      input.style.width = '100%';
+      
+      if (presentationMode === 'table') {
+        input.style.width = '100%';
+      } else {
+        input.style.width = '60px';
+      }
+      
       input.setAttribute('aria-label', paramDef.label);
       input.setAttribute('data-param', paramDef.name);
       
@@ -424,6 +520,13 @@ export function render({ model, el }) {
       
       group.appendChild(label);
       group.appendChild(input);
+      
+      if (presentationMode === 'sentence' && index < DISTRIBUTIONS[distribution].params.length - 1) {
+        const comma = document.createElement('span');
+        comma.textContent = ',';
+        group.appendChild(comma);
+      }
+      
       paramsContainer.appendChild(group);
       
       paramInputs[paramDef.name] = input;
@@ -453,9 +556,15 @@ export function render({ model, el }) {
     const loStr = useLo ? (dist.discrete ? Math.round(lo).toString() : lo.toFixed(2)) : '-∞';
     const hiStr = useHi ? (dist.discrete ? Math.round(hi).toString() : hi.toFixed(2)) : '+∞';
     
-    probResult.innerHTML = `<strong>P(${loStr} ≤ X ≤ ${hiStr}) = ${prob.toFixed(4)}</strong> (${(prob * 100).toFixed(2)}%)`;
-    evResult.innerHTML = `<strong>Expected Value:</strong> ${ev.toFixed(4)}`;
-    seResult.innerHTML = `<strong>Standard Error:</strong> ${se.toFixed(4)}`;
+    if (presentationMode === 'table') {
+      probResult.innerHTML = `<strong>P(${loStr} ≤ X ≤ ${hiStr}) = ${prob.toFixed(4)}</strong> (${(prob * 100).toFixed(2)}%)`;
+      evResult.innerHTML = `<strong>Expected Value:</strong> ${ev.toFixed(4)}`;
+      seResult.innerHTML = `<strong>Standard Error:</strong> ${se.toFixed(4)}`;
+    } else {
+      probResult.innerHTML = `${prob.toFixed(4)} (${(prob * 100).toFixed(2)}%).`;
+      evResult.innerHTML = `E(X) = ${ev.toFixed(4)},`;
+      seResult.innerHTML = `SE(X) = ${se.toFixed(4)}.`;
+    }
   }
 
   // Initial render
