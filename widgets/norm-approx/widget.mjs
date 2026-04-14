@@ -34,8 +34,18 @@ function getCSSVar(name) {
  * Compute histogram bins
  */
 function computeBins(data, numBins) {
+  const min = Math.min(...data);
+  const max = Math.max(...data);
+  
+  // Create exactly numBins - 1 thresholds for exactly numBins bins
+  const thresholds = [];
+  for (let i = 1; i < numBins; i++) {
+    thresholds.push(min + (max - min) * i / numBins);
+  }
+  
   const binGenerator = bin()
-    .thresholds(numBins);
+    .domain([min, max])
+    .thresholds(thresholds);
   
   return binGenerator(data);
 }
@@ -84,8 +94,7 @@ function renderHistogramWithNormal(svg, width, height, data, numBins, lo, hi, xL
 
   // Create axes
   const xAxis = axisBottom(xScale)
-    .ticks(8)
-    .tickFormat(d => d.toExponential(1));
+    .ticks(8);
   
   const yAxis = axisLeft(yScale).ticks(6);
 
@@ -215,7 +224,7 @@ async function render({ model, el }) {
   const data = rawData.map(x => (x - m) / sd);
   
   let title = model.get('title');
-  const numBins = 10; // Fixed to match original applet
+  let numBins = model.get('bins') !== undefined ? model.get('bins') : 10;
   let lo = model.get('lo') !== undefined ? model.get('lo') : -2;
   let hi = model.get('hi') !== undefined ? model.get('hi') : 2;
 
@@ -234,6 +243,24 @@ async function render({ model, el }) {
   // Create controls container
   const controls = document.createElement('div');
   controls.className = 'widget-controls';
+
+  // Bins input
+  const binsGroup = document.createElement('div');
+  binsGroup.className = 'widget-input-group';
+  const binsLabel = document.createElement('label');
+  binsLabel.className = 'widget-label';
+  binsLabel.textContent = 'Bins:';
+  const binsInput = document.createElement('input');
+  binsInput.className = 'widget-input';
+  binsInput.type = 'number';
+  binsInput.value = numBins;
+  binsInput.min = '1';
+  binsInput.step = '1';
+  binsInput.style.width = '60px';
+  binsInput.setAttribute('aria-label', 'Bins');
+  binsGroup.appendChild(binsLabel);
+  binsGroup.appendChild(binsInput);
+  controls.appendChild(binsGroup);
 
   // Lo input
   const loGroup = document.createElement('div');
@@ -315,6 +342,15 @@ async function render({ model, el }) {
   }
 
   // Event listeners
+  binsInput.addEventListener('input', () => {
+    const newBins = parseInt(binsInput.value, 10);
+    if (!isNaN(newBins) && newBins >= 1) {
+      numBins = newBins;
+      model.set('bins', numBins);
+      update();
+    }
+  });
+
   loInput.addEventListener('input', () => {
     const newLo = parseFloat(loInput.value);
     if (!isNaN(newLo)) {
