@@ -28,16 +28,6 @@ function getCSSVar(name) {
 }
 
 /**
- * Compute histogram bins
- */
-function computeBins(data, numBins) {
-  const binGenerator = bin()
-    .thresholds(numBins);
-  
-  return binGenerator(data);
-}
-
-/**
  * Render the histogram with highlighted region
  */
 function renderHistogram(svg, width, height, data, numBins, lo, hi, xLabel) {
@@ -51,26 +41,31 @@ function renderHistogram(svg, width, height, data, numBins, lo, hi, xLabel) {
   const g = svg.append('g')
     .attr('transform', `translate(${margin.left},${margin.top})`);
 
-  // Compute bins
-  const bins = computeBins(data, numBins);
-
-  // Create scales
+  // Create base scales with nicely rounded ends to accommodate bins
   const xMin = Math.min(...data);
   const xMax = Math.max(...data);
   
   const xScale = scaleLinear()
     .domain([xMin, xMax])
+    .nice(numBins)
     .range([0, innerWidth]);
+
+  // Compute bins explicitly against the x-scale
+  const binGenerator = bin()
+    .domain(xScale.domain())
+    .thresholds(xScale.ticks(numBins));
+  
+  const bins = binGenerator(data);
 
   const yMax = Math.max(...bins.map(b => b.length));
   const yScale = scaleLinear()
     .domain([0, yMax])
+    .nice()
     .range([innerHeight, 0]);
 
   // Create axes
   const xAxis = axisBottom(xScale)
-    .ticks(8)
-    .tickFormat(d => d.toExponential(1));
+    .ticks(8);
   
   const yAxis = axisLeft(yScale).ticks(6);
 
@@ -341,14 +336,22 @@ async function render({ model, el }) {
 
     renderHistogram(svg, width, height, data, numBins, lo, hi, xLabel);
 
+    // Helper to format numbers reasonably
+    const formatNum = (n) => {
+      if (Math.abs(n) >= 10000 || (Math.abs(n) < 0.01 && n !== 0)) {
+        return n.toExponential(2);
+      }
+      return Number.isInteger(n) ? n.toString() : n.toFixed(3).replace(/\.?0+$/, '');
+    };
+
     const prop = calculateProportion(data, lo, hi);
     const count = Math.round(prop * data.length);
-    propDisplay.textContent = `Proportion in range [${lo.toExponential(2)}, ${hi.toExponential(2)}]: ${prop.toFixed(3)} (${count}/${data.length} values)`;
+    propDisplay.textContent = `Proportion in range [${formatNum(lo)}, ${formatNum(hi)}]: ${prop.toFixed(3)} (${count}/${data.length} values)`;
 
     if (data.length > 0) {
       const mean = data.reduce((a, b) => a + b, 0) / data.length;
       const sd = Math.sqrt(data.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / data.length);
-      statsDisplay.textContent = `N = ${data.length}, Mean = ${mean.toExponential(2)}, SD = ${sd.toExponential(2)}`;
+      statsDisplay.textContent = `N = ${data.length}, Mean = ${formatNum(mean)}, SD = ${formatNum(sd)}`;
     } else {
       statsDisplay.textContent = 'No data';
     }
@@ -602,7 +605,7 @@ async function render({ model, el }) {
       lo = newLo;
       if (lo > hi) {
         hi = lo;
-        hiInput.value = hi.toExponential(5);
+        hiInput.value = hi.toString();
       }
       update();
     }
@@ -614,7 +617,7 @@ async function render({ model, el }) {
       hi = newHi;
       if (hi < lo) {
         lo = hi;
-        loInput.value = lo.toExponential(5);
+        loInput.value = lo.toString();
       }
       update();
     }
