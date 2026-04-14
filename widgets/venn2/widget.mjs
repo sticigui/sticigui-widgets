@@ -101,6 +101,9 @@ export function render({ model, el }) {
   let pab = model.get('pab') || 0.1;
   let highlight = model.get('highlight') || 'AB';
   
+  let coords = null;
+  let currentGeom = null;
+  
   // Ensure valid probabilities
   pa = Math.max(0, Math.min(1, pa));
   pb = Math.max(0, Math.min(1, pb));
@@ -258,16 +261,13 @@ export function render({ model, el }) {
   svg.setAttribute('data-testid', 'venn-svg');
   svgContainer.appendChild(svg);
   
-  // Drag state
-  let dragState = null;
-  
   /**
    * Compute circle positions and radii
    */
   function computeGeometry() {
     const rect = svgContainer.getBoundingClientRect();
-    const width = rect.width;
-    const height = rect.height;
+    const width = rect.width || 500;
+    const height = rect.height || 500;
     const padding = 40;
     
     const availableWidth = width - 2 * padding;
@@ -275,28 +275,35 @@ export function render({ model, el }) {
     const maxDim = Math.min(availableWidth, availableHeight);
     
     // Scale factor: map probabilities to radii
-    // Area = π * r² = C² * p, so r = C * √p
-    // Handle edge case where both pa and pb are very small
-    // Constant scale relative to the universal set
     const C = maxDim / 2.2;
     
     const rA = C * Math.sqrt(Math.max(0.0001, pa));
     const rB = C * Math.sqrt(Math.max(0.0001, pb));
     
-    // Find distance between centers
-    const targetIntersectionArea = C * C * pab;
-    const d = findDistanceForIntersection(rA, rB, targetIntersectionArea);
+    if (!coords) {
+      // Find distance between centers
+      const targetIntersectionArea = Math.PI * C * C * pab;
+      const d = findDistanceForIntersection(rA, rB, targetIntersectionArea);
+      
+      // Center positions (A on left, B on right)
+      const centerX = width / 2;
+      const centerY = height / 2;
+      
+      coords = {
+        xA: centerX - d / 2,
+        yA: centerY,
+        xB: centerX + d / 2,
+        yB: centerY
+      };
+    }
     
-    // Center positions (A on left, B on right)
-    const centerX = width / 2;
-    const centerY = height / 2;
-    
-    const xA = centerX - d / 2;
-    const yA = centerY;
-    const xB = centerX + d / 2;
-    const yB = centerY;
-    
-    return { rA, rB, xA, yA, xB, yB, width, height };
+    currentGeom = { 
+      rA, rB, 
+      xA: coords.xA, yA: coords.yA, 
+      xB: coords.xB, yB: coords.yB, 
+      width, height, C 
+    };
+    return currentGeom;
   }
   
   /**
@@ -590,98 +597,80 @@ export function render({ model, el }) {
     labelB.setAttribute('font-weight', 'bold');
     labelB.textContent = 'B';
     svg.appendChild(labelB);
-    
-    // Setup drag handlers
-    setupDragHandlers(circleA, 'A', geom);
-    setupDragHandlers(circleB, 'B', geom);
   }
   
   /**
-   * Setup drag handlers for a circle
+   * Drag Handlers
    */
-  function setupDragHandlers(circle, which, geom) {
-    const handleMouseDown = (e) => {
-      e.preventDefault();
-      const rect = svg.getBoundingClientRect();
-      dragState = {
-        which,
-        startX: e.clientX - rect.left,
-        startY: e.clientY - rect.top,
-        initialXA: geom.xA,
-        initialYA: geom.yA,
-        initialXB: geom.xB,
-        initialYB: geom.yB,
-        rA: geom.rA,
-        rB: geom.rB
-      };
-    };
-    
-    circle.addEventListener('mousedown', handleMouseDown);
-  }
+  let dragging = null;
+  let dragOffset = { x: 0, y: 0 };
   
-  /**
-   * Handle mouse move (global)
-   */
-  function handleMouseMove(e) {
-    if (!dragState) return;
-    
+  function handleMouseDown(e) {
+    if (!currentGeom) return;
     const rect = svg.getBoundingClientRect();
-    const currentX = e.clientX - rect.left;
-    const currentY = e.clientY - rect.top;
+    const x = e.clientX - rect.left;
+    const y = e.clientY - rect.top;
     
-    const dx = currentX - dragState.startX;
-    const dy = currentY - dragState.startY;
+    const distA = Math.hypot(x - coords.xA, y - coords.yA);
+    const distB = Math.hypot(x - coords.xB, y - coords.yB);
     
-    let newXA = dragState.initialXA;
-    let newYA = dragState.initialYA;
-    let newXB = dragState.initialXB;
-    let newYB = dragState.initialYB;
+    let clicked = null;
+    let minDist = Infinity;
     
-    if (dragState.which === 'A') {
-      newXA += dx;
-      newYA += dy;
-    } else {
-      newXB += dx;
-      newYB += dy;
+    if (distB <= currentGeom.rB) { clicked = 'B'; minDist = distB; }
+    if (distA <= currentGeom.rA && (clicked === null || distA < minDist)) { clicked = 'A'; minDist = distA; }
+    
+    if (clicked) {
+      dragging = clicked;
+      dragOffset = { x: x - coords[`x${clicked}`], y: y - coords[`y${clicked}`] };
+      e.preventDefault(); // Prevent text selection while dragging
     }
-    
-    // Constrain to canvas bounds
-    const padding = 10;
-    newXA = Math.max(dragState.rA + padding, Math.min(rect.width - dragState.rA - padding, newXA));
-    newYA = Math.max(dragState.rA + padding, Math.min(rect.height - dragState.rA - padding, newYA));
-    newXB = Math.max(dragState.rB + padding, Math.min(rect.width - dragState.rB - padding, newXB));
-    newYB = Math.max(dragState.rB + padding, Math.min(rect.height - dragState.rB - padding, newYB));
-    
-    // Compute new distance
-    const d = Math.sqrt((newXB - newXA) ** 2 + (newYB - newYA) ** 2);
-    
-    // Compute new intersection area from geometry
-    const newIntersectionArea = circleIntersectionArea(dragState.rA, dragState.rB, d);
-    
-    // Convert back to probability
-    const C = Math.sqrt(Math.PI * dragState.rA * dragState.rA / pa);
-    const newPab = newIntersectionArea / (C * C);
-    
-    // Update pab (constrained)
-    pab = Math.max(0, Math.min(pa, pb, newPab));
-    
-    // Update target ratio when dragging
-    if (Math.min(pa, pb) > 0) {
-      targetPabRatio = pab / Math.min(pa, pb);
+  }
+  
+  function handleMouseMove(e) {
+    if (!dragging || !currentGeom) {
+      if (currentGeom) {
+        const rect = svg.getBoundingClientRect();
+        const x = e.clientX - rect.left;
+        const y = e.clientY - rect.top;
+        const distA = Math.hypot(x - coords.xA, y - coords.yA);
+        const distB = Math.hypot(x - coords.xB, y - coords.yB);
+        
+        if (distA <= currentGeom.rA || distB <= currentGeom.rB) {
+          svg.style.cursor = 'grab';
+        } else {
+          svg.style.cursor = 'default';
+        }
+      }
+      return;
     }
+    svg.style.cursor = 'grabbing';
+    const rect = svg.getBoundingClientRect();
+    const x = e.clientX - rect.left - dragOffset.x;
+    const y = e.clientY - rect.top - dragOffset.y;
     
-    model.set('pab', pab);
+    coords[`x${dragging}`] = x;
+    coords[`y${dragging}`] = y;
     
-    // Re-render
+    updateProbsFromCoords();
     renderVenn();
     updateProbDisplay();
   }
   
-  /**
-   * Handle mouse up (global)
-   */
   function handleMouseUp() {
-    dragState = null;
+    dragging = null;
+  }
+  
+  function updateProbsFromCoords() {
+    const geom = computeGeometry();
+    const C2 = Math.PI * geom.C * geom.C;
+    
+    const dAB = Math.hypot(coords.xA - coords.xB, coords.yA - coords.yB);
+    const areaAB = circleIntersectionArea(geom.rA, geom.rB, dAB);
+    
+    pab = Math.max(0, Math.min(pa, pb, areaAB / C2));
+    
+    model.set('pab', pab);
   }
   
   /**
@@ -691,65 +680,31 @@ export function render({ model, el }) {
     renderVenn();
   }
   
-  // Track the target overlap ratio to restore when sliders increase
-  let targetPabRatio = pab / Math.min(pa, pb);
-  
   // Event handlers for sliders
   paSlider.addEventListener('input', () => {
-    const oldPa = pa;
     pa = parseFloat(paSlider.value);
     paValue.textContent = pa.toFixed(3);
     
-    // If increasing pa, try to restore the target overlap ratio
-    if (pa > oldPa && pab < Math.min(pa, pb)) {
-      const maxPossible = Math.min(pa, pb);
-      pab = Math.min(targetPabRatio * maxPossible, maxPossible);
-    }
-    
-    // Constrain pab to valid range
-    pab = Math.max(0, Math.min(pab, pa, pb));
-    
-    // Update target ratio if we have a valid overlap
-    if (Math.min(pa, pb) > 0) {
-      targetPabRatio = pab / Math.min(pa, pb);
-    }
-    
     model.set('pa', pa);
-    model.set('pab', pab);
-    
+    if (coords) updateProbsFromCoords();
     renderVenn();
     updateProbDisplay();
   });
   
   pbSlider.addEventListener('input', () => {
-    const oldPb = pb;
     pb = parseFloat(pbSlider.value);
     pbValue.textContent = pb.toFixed(3);
     
-    // If increasing pb, try to restore the target overlap ratio
-    if (pb > oldPb && pab < Math.min(pa, pb)) {
-      const maxPossible = Math.min(pa, pb);
-      pab = Math.min(targetPabRatio * maxPossible, maxPossible);
-    }
-    
-    // Constrain pab to valid range
-    pab = Math.max(0, Math.min(pab, pa, pb));
-    
-    // Update target ratio if we have a valid overlap
-    if (Math.min(pa, pb) > 0) {
-      targetPabRatio = pab / Math.min(pa, pb);
-    }
-    
     model.set('pb', pb);
-    model.set('pab', pab);
-    
+    if (coords) updateProbsFromCoords();
     renderVenn();
     updateProbDisplay();
   });
   
   // Global mouse handlers for dragging
-  document.addEventListener('mousemove', handleMouseMove);
-  document.addEventListener('mouseup', handleMouseUp);
+  svg.addEventListener('mousedown', handleMouseDown);
+  window.addEventListener('mousemove', handleMouseMove);
+  window.addEventListener('mouseup', handleMouseUp);
   
   // Append container to element
   el.appendChild(container);
@@ -761,8 +716,9 @@ export function render({ model, el }) {
   
   // Cleanup
   return () => {
-    document.removeEventListener('mousemove', handleMouseMove);
-    document.removeEventListener('mouseup', handleMouseUp);
+    svg.removeEventListener('mousedown', handleMouseDown);
+    window.removeEventListener('mousemove', handleMouseMove);
+    window.removeEventListener('mouseup', handleMouseUp);
   };
 }
 

@@ -332,9 +332,9 @@ export function render({ model, el }) {
     
     if (!coords) {
       // Initial equilateral triangle
-      const targetAreaAB = C * C * pab;
-      const targetAreaAC = C * C * pac;
-      const targetAreaBC = C * C * pbc;
+      const targetAreaAB = Math.PI * C * C * pab;
+      const targetAreaAC = Math.PI * C * C * pac;
+      const targetAreaBC = Math.PI * C * C * pbc;
       
       const dAB = findDistanceForIntersection(rA, rB, targetAreaAB);
       const dAC = findDistanceForIntersection(rA, rC, targetAreaAC);
@@ -832,7 +832,7 @@ export function render({ model, el }) {
   
   function updateProbsFromCoords() {
     const geom = computeGeometry();
-    const C2 = geom.C * geom.C;
+    const C2 = Math.PI * geom.C * geom.C;
     
     const dAB = Math.hypot(coords.xA - coords.xB, coords.yA - coords.yB);
     const dAC = Math.hypot(coords.xA - coords.xC, coords.yA - coords.yC);
