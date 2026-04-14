@@ -276,7 +276,7 @@ function render({ model, el }) {
   dfGroup.style.alignItems = 'flex-start';
   const dfLabel = document.createElement('label');
   dfLabel.className = 'widget-label';
-  dfLabel.textContent = 'df:';
+  dfLabel.textContent = 'Degrees of Freedom:';
   const dfInput = document.createElement('input');
   dfInput.className = 'widget-input';
   dfInput.type = 'number';
@@ -385,7 +385,7 @@ function render({ model, el }) {
     renderCurve(svg, width, height, distribution, params, lo, hi);
 
     const prob = calculateProbability(distribution, params, lo, hi);
-    probDisplay.textContent = `P(${lo.toFixed(2)} ≤ X ≤ ${hi.toFixed(2)}) = ${prob.toFixed(4)}`;
+    probDisplay.textContent = `Selected area: ${(prob * 100).toFixed(4)}%`;
   }
 
   // Event listeners
