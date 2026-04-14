@@ -38,7 +38,7 @@ export function render({ model, el }) {
   
   // Get model state
   let title = model.get('title');
-  let n = model.get('n') || 500;
+  let n = model.get('n') || 800;
   let p = model.get('p') || 0.5;
   let mode = model.get('mode') || 'count';
   let seed = model.get('seed') || 42;
@@ -111,6 +111,7 @@ export function render({ model, el }) {
   // Chart container
   const chartContainer = document.createElement('div');
   chartContainer.className = 'widget-chart-container';
+  chartContainer.style.height = '400px';
   chartContainer.setAttribute('data-testid', 'chart-container');
   container.appendChild(chartContainer);
   
@@ -175,8 +176,8 @@ export function render({ model, el }) {
     
     // Get dimensions
     const containerRect = chartContainer.getBoundingClientRect();
-    const width = containerRect.width;
-    const height = containerRect.height;
+    const width = containerRect.width || 800;
+    const height = containerRect.height || 400;
     
     // Margins
     const margin = { top: 20, right: 20, bottom: 40, left: 60 };

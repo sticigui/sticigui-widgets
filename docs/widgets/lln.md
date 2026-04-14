@@ -5,9 +5,9 @@ description: Watch convergence to the expected value as sample size grows
 
 ```{anywidget} ../../widgets/lln/dist/widget.mjs
 {
-  "n": 500,
+  "n": 800,
   "p": 0.5,
-  "mode": "proportion",
+  "mode": "count",
   "seed": 42
 }
 ```
