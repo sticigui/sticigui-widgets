@@ -17,8 +17,12 @@ This repository contains a collection of interactive widgets to help the reader 
 ````markdown
 ```{anywidget} ./sticigui-widgets/widgets/binhist/dist/widget.mjs
 {
-  "n": 20,
-  "p": 0.5
+  "n": 5,
+  "p": 0.5,
+  "lo": 5,
+  "hi": 15,
+  "curve_points": 200,
+  "show_normal": false
 }
 ```
 ````
