@@ -10,7 +10,6 @@ project:
     - file: widgets/correlation.md
     - file: widgets/distribution-viewer.md
     - file: widgets/histogram.md
-    - file: widgets/hist-control.md
     - file: widgets/lln.md
     - file: widgets/norm-approx.md
     - file: widgets/prob-calc.md

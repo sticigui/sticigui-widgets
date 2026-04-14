@@ -1,22 +1,19 @@
 /**
- * Histogram Widget
+ * Histogram Control Widget
  * 
- * Renders a histogram of a real dataset with user-selectable highlight region.
- * Displays the proportion of data in the highlighted region.
+ * Two overlaid histograms showing full dataset and filtered subset.
+ * Allows filtering by variable restrictions and comparing distributions.
  */
 
-import { select } from 'd3-selection';
-import { scaleLinear } from 'd3-scale';
-import { axisBottom, axisLeft } from 'd3-axis';
-import { bin } from 'd3-array';
 import { fetchData } from '../../src/utils/fetchData.mjs';
+import { mean, sampleSD, normalPDF } from '../../src/math/stats-math.mjs';
 import styles from './styles.css';
 
 // Inject styles into document
 function injectStyles() {
-  if (!document.getElementById('histogram-styles')) {
+  if (!document.getElementById('hist-control-styles')) {
     const styleEl = document.createElement('style');
-    styleEl.id = 'histogram-styles';
+    styleEl.id = 'hist-control-styles';
     styleEl.textContent = styles;
     document.head.appendChild(styleEl);
   }
@@ -28,165 +25,50 @@ function getCSSVar(name) {
 }
 
 /**
- * Render the histogram with highlighted region
- */
-function renderHistogram(svg, width, height, data, numBins, lo, hi, xLabel) {
-  const margin = { top: 20, right: 20, bottom: 50, left: 60 };
-  const innerWidth = width - margin.left - margin.right;
-  const innerHeight = height - margin.top - margin.bottom;
-
-  // Clear previous content
-  svg.selectAll('*').remove();
-
-  const g = svg.append('g')
-    .attr('transform', `translate(${margin.left},${margin.top})`);
-
-  // Create base scales with nicely rounded ends to accommodate bins
-  const xMin = Math.min(...data);
-  const xMax = Math.max(...data);
-  
-  const xScale = scaleLinear()
-    .domain([xMin, xMax])
-    .nice(numBins)
-    .range([0, innerWidth]);
-
-  // Compute bins explicitly against the x-scale
-  // To force exactly `numBins` bins, we calculate the thresholds manually
-  const domainMin = xScale.domain()[0];
-  const domainMax = xScale.domain()[1];
-  const step = (domainMax - domainMin) / numBins;
-  const thresholds = Array.from({length: numBins - 1}, (_, i) => domainMin + (i + 1) * step);
-
-  const binGenerator = bin()
-    .domain(xScale.domain())
-    .thresholds(thresholds);
-  
-  const bins = binGenerator(data);
-
-  const yMax = Math.max(...bins.map(b => b.length));
-  const yScale = scaleLinear()
-    .domain([0, yMax])
-    .nice()
-    .range([innerHeight, 0]);
-
-  // Create axes
-  const xAxis = axisBottom(xScale)
-    .ticks(8);
-  
-  const yAxis = axisLeft(yScale).ticks(6);
-
-  g.append('g')
-    .attr('transform', `translate(0,${innerHeight})`)
-    .call(xAxis)
-    .style('color', getCSSVar('--widget-text-primary'))
-    .selectAll('text')
-    .style('fill', getCSSVar('--widget-text-primary'));
-
-  g.append('g')
-    .call(yAxis)
-    .style('color', getCSSVar('--widget-text-primary'))
-    .selectAll('text')
-    .style('fill', getCSSVar('--widget-text-primary'));
-
-  // Axis labels
-  g.append('text')
-    .attr('x', innerWidth / 2)
-    .attr('y', innerHeight + 40)
-    .attr('text-anchor', 'middle')
-    .style('fill', getCSSVar('--widget-text-primary'))
-    .style('font-size', '12px')
-    .text(xLabel || 'Value');
-
-  g.append('text')
-    .attr('transform', 'rotate(-90)')
-    .attr('x', -innerHeight / 2)
-    .attr('y', -45)
-    .attr('text-anchor', 'middle')
-    .style('fill', getCSSVar('--widget-text-primary'))
-    .style('font-size', '12px')
-    .text('Frequency');
-
-  // Draw bars
-  g.selectAll('.bar')
-    .data(bins)
-    .enter()
-    .append('rect')
-    .attr('class', 'bar')
-    .attr('x', d => xScale(d.x0))
-    .attr('y', d => yScale(d.length))
-    .attr('width', d => Math.max(0, xScale(d.x1) - xScale(d.x0) - 1))
-    .attr('height', d => innerHeight - yScale(d.length))
-    .style('fill', d => {
-      // Check if bin overlaps with highlight range
-      const binMid = (d.x0 + d.x1) / 2;
-      return binMid >= lo && binMid <= hi
-        ? getCSSVar('--widget-accent')
-        : getCSSVar('--widget-primary');
-    })
-    .style('stroke', getCSSVar('--widget-border-dark'))
-    .style('stroke-width', '0.5');
-}
-
-/**
- * Calculate proportion of data in range
- */
-function calculateProportion(data, lo, hi) {
-  const inRange = data.filter(d => d >= lo && d <= hi).length;
-  return inRange / data.length;
-}
-
-/**
  * Main render function
  */
-async function render({ model, el }) {
+export async function render({ model, el }) {
   // Inject CSS
   injectStyles();
-  
-  // Load data
-  const dataSpec = model.get('data') || '../../public-data/gravity.json';
-  const datasets = await fetchData(dataSpec);
-  
-  // State for selected dataset and variable
-  let datasetNames = Object.keys(datasets);
-  let selectedDatasetName = datasetNames[0];
-  let selectedDataset = datasets[selectedDatasetName];
-  
-  let variables = getNumericVariables(selectedDataset);
-  let selectedVariable = variables[0];
-  let data = getVariableData(selectedDataset, selectedVariable);
-  
-  // Get initial state
+
+  // Get model state
   let title = model.get('title');
-  let numBins = model.get('bins') || 20;
-  let lo = model.get('lo') || -0.0001;
-  let hi = model.get('hi') || 0.0001;
-
-  // Extract numeric keys from a dataset for the Variable dropdown
-  function getNumericVariables(dataset) {
-    if (!dataset || dataset.length === 0) return [];
-    const firstRow = dataset[0];
-    if (typeof firstRow === 'number') return ['value'];
-    
-    // It's an array of objects
-    return Object.keys(firstRow).filter(key => {
-      // Check if mostly numbers
-      return typeof firstRow[key] === 'number' || !isNaN(parseFloat(firstRow[key]));
-    });
-  }
-
-  // Helper to extract a 1D array of numbers for the selected variable
-  function getVariableData(dataset, variable) {
-    if (!dataset || dataset.length === 0) return [];
-    if (variable === 'value' && typeof dataset[0] !== 'object') {
-      return dataset.map(d => parseFloat(d)).filter(n => !isNaN(n));
+  let advanced = model.get('advanced') || false;
+  const dataSpec = model.get('data');
+  let variable = model.get('variable') || null;
+  let bins = model.get('bins') || 20;
+  let lo = model.get('lo') !== undefined ? model.get('lo') : null;
+  let hi = model.get('hi') !== undefined ? model.get('hi') : null;
+  let showNormal = model.get('show_normal') || false;
+  let showFull = model.get('show_full') !== undefined ? model.get('show_full') : true;
+  let showRestricted = model.get('show_restricted') !== undefined ? model.get('show_restricted') : true;
+  let restrictions = model.get('restrictions') || [];
+  
+  // Load data from URL, inline array, or object with named datasets
+  let datasets = {};
+  let datasetNames = [];
+  let currentDataset = 'default';
+  
+  try {
+    if (dataSpec) {
+      datasets = await fetchData(dataSpec);
+      datasetNames = Object.keys(datasets);
+      currentDataset = datasetNames[0] || 'default';
     }
-    return dataset.map(d => parseFloat(d[variable])).filter(n => !isNaN(n));
+  } catch (error) {
+    console.error('[hist-control] Error loading data:', error);
+    el.textContent = `Error loading data: ${error.message}`;
+    return;
   }
-
+  
+  // Current state
+  let data = datasets[currentDataset] || [];
+  let variables = [];
+  
   // Container setup
   const container = document.createElement('div');
   container.className = 'widget-container';
-
+  
   // Title (optional)
   if (title) {
     const titleEl = document.createElement('h3');
@@ -194,65 +76,47 @@ async function render({ model, el }) {
     titleEl.textContent = title;
     container.appendChild(titleEl);
   }
-
-  // Helper to determine an appropriate step size for inputs based on the data range
-  function getOptimalStep(dataArray) {
-    if (!dataArray || dataArray.length === 0) return '0.1';
-    const range = Math.max(...dataArray) - Math.min(...dataArray);
-    if (range === 0) return '0.1';
-    const step = Math.pow(10, Math.floor(Math.log10(range)) - 2);
-    // Limit precision to avoid floating point representation issues in the input step attribute
-    return step.toPrecision(1).replace(/\.0+e/, 'e');
+  
+  // Controls row 1: Dataset and variable selectors
+  const controls1 = document.createElement('div');
+  controls1.className = 'widget-controls';
+  
+  // Dataset selector (only show if multiple datasets)
+  let datasetSelect;
+  if (datasetNames.length > 1) {
+    const datasetGroup = document.createElement('div');
+    datasetGroup.className = 'widget-input-group';
+    const datasetLabel = document.createElement('label');
+    datasetLabel.className = 'widget-label';
+    datasetLabel.textContent = 'Dataset:';
+    datasetSelect = document.createElement('select');
+    datasetSelect.className = 'widget-select';
+    datasetSelect.setAttribute('data-testid', 'dataset-select');
+    datasetNames.forEach(ds => {
+      const option = document.createElement('option');
+      option.value = ds;
+      option.textContent = ds.toUpperCase();
+      if (ds === currentDataset) option.selected = true;
+      datasetSelect.appendChild(option);
+    });
+    datasetGroup.appendChild(datasetLabel);
+    datasetGroup.appendChild(datasetSelect);
+    controls1.appendChild(datasetGroup);
   }
-
-  // Create controls container
-  const controls = document.createElement('div');
-  controls.className = 'widget-controls';
-
-  // Data dropdown (hide if only one 'default' dataset)
-  const dataGroup = document.createElement('div');
-  dataGroup.className = 'widget-input-group';
-  dataGroup.style.display = (datasetNames.length === 1 && datasetNames[0] === 'default') ? 'none' : 'flex';
-  const dataLabel = document.createElement('label');
-  dataLabel.className = 'widget-label';
-  dataLabel.textContent = 'Data:';
-  const dataSelect = document.createElement('select');
-  dataSelect.className = 'widget-input';
-  datasetNames.forEach(name => {
-    const opt = document.createElement('option');
-    opt.value = name;
-    opt.textContent = name;
-    dataSelect.appendChild(opt);
-  });
-  dataSelect.value = selectedDatasetName;
-  dataGroup.appendChild(dataLabel);
-  dataGroup.appendChild(dataSelect);
-
-  // Variable dropdown (hide if no variables or just 'value')
+  
+  // Variable selector
   const varGroup = document.createElement('div');
   varGroup.className = 'widget-input-group';
   const varLabel = document.createElement('label');
   varLabel.className = 'widget-label';
   varLabel.textContent = 'Variable:';
   const varSelect = document.createElement('select');
-  varSelect.className = 'widget-input';
-  
-  function populateVariableDropdown() {
-    varSelect.innerHTML = '';
-    variables.forEach(v => {
-      const opt = document.createElement('option');
-      opt.value = v;
-      opt.textContent = v;
-      varSelect.appendChild(opt);
-    });
-    varSelect.value = selectedVariable;
-    // hide if just the implicit 'value'
-    varGroup.style.display = (variables.length === 1 && variables[0] === 'value') ? 'none' : 'flex';
-  }
-  populateVariableDropdown();
+  varSelect.className = 'widget-select';
+  varSelect.setAttribute('data-testid', 'variable-select');
   varGroup.appendChild(varLabel);
   varGroup.appendChild(varSelect);
-
+  controls1.appendChild(varGroup);
+  
   // Bins input
   const binsGroup = document.createElement('div');
   binsGroup.className = 'widget-input-group';
@@ -262,25 +126,26 @@ async function render({ model, el }) {
   const binsInput = document.createElement('input');
   binsInput.className = 'widget-input';
   binsInput.type = 'number';
-  binsInput.value = numBins;
   binsInput.min = '5';
-  binsInput.max = '50';
-  binsInput.step = '1';
-  binsInput.setAttribute('aria-label', 'Number of bins');
+  binsInput.max = '100';
+  binsInput.value = bins;
+  binsInput.setAttribute('data-testid', 'bins-input');
   binsGroup.appendChild(binsLabel);
   binsGroup.appendChild(binsInput);
-
+  controls1.appendChild(binsGroup);
+  
+  
   // Lo input
   const loGroup = document.createElement('div');
   loGroup.className = 'widget-input-group';
+  if (!advanced) controls1.appendChild(loGroup);
   const loLabel = document.createElement('label');
   loLabel.className = 'widget-label';
   loLabel.textContent = 'Area from:';
   const loInput = document.createElement('input');
   loInput.className = 'widget-input';
   loInput.type = 'number';
-  loInput.value = lo;
-  loInput.step = getOptimalStep(data);
+  if (lo !== null) loInput.value = lo;
   loInput.setAttribute('aria-label', 'Area from');
   loGroup.appendChild(loLabel);
   loGroup.appendChild(loInput);
@@ -288,14 +153,14 @@ async function render({ model, el }) {
   // Hi input
   const hiGroup = document.createElement('div');
   hiGroup.className = 'widget-input-group';
+  if (!advanced) controls1.appendChild(hiGroup);
   const hiLabel = document.createElement('label');
   hiLabel.className = 'widget-label';
   hiLabel.textContent = 'Area to:';
   const hiInput = document.createElement('input');
   hiInput.className = 'widget-input';
   hiInput.type = 'number';
-  hiInput.value = hi;
-  hiInput.step = getOptimalStep(data);
+  if (hi !== null) hiInput.value = hi;
   hiInput.setAttribute('aria-label', 'Area to');
   hiGroup.appendChild(hiLabel);
   hiGroup.appendChild(hiInput);
@@ -304,94 +169,129 @@ async function render({ model, el }) {
   const listDataBtn = document.createElement('button');
   listDataBtn.className = 'widget-button widget-button-secondary';
   listDataBtn.textContent = 'List Data';
+  controls1.appendChild(listDataBtn);
 
   // Univariate Stats button
   const statsBtn = document.createElement('button');
   statsBtn.className = 'widget-button widget-button-secondary';
   statsBtn.textContent = 'Univariate Stats';
+  controls1.appendChild(statsBtn);
 
-  controls.appendChild(dataGroup);
-  controls.appendChild(varGroup);
-  controls.appendChild(binsGroup);
-  controls.appendChild(loGroup);
-  controls.appendChild(hiGroup);
-  controls.appendChild(listDataBtn);
-  controls.appendChild(statsBtn);
-  container.appendChild(controls);
-
+  container.appendChild(controls1);
+  
+  // Controls row 2: Show/hide toggles and normal curve
+  const controls2 = document.createElement('div');
+  controls2.className = 'widget-controls';
+  
+  // Helper to create checkbox
+  function createCheckbox(id, label, checked, testId) {
+    const checkbox = document.createElement('input');
+    checkbox.type = 'checkbox';
+    checkbox.checked = checked;
+    checkbox.id = id;
+    checkbox.setAttribute('data-testid', testId);
+    const labelEl = document.createElement('label');
+    labelEl.htmlFor = id;
+    labelEl.textContent = label;
+    const group = document.createElement('div');
+    group.className = 'widget-checkbox';
+    group.appendChild(checkbox);
+    group.appendChild(labelEl);
+    return { group, checkbox };
+  }
+  
+  const { group: fullGroup, checkbox: fullCheckbox } = 
+    createCheckbox('show-full', 'Show Full', showFull, 'show-full-checkbox');
+  const { group: restGroup, checkbox: restCheckbox } = 
+    createCheckbox('show-rest', 'Show Restricted', showRestricted, 'show-restricted-checkbox');
+  const { group: normGroup, checkbox: normCheckbox } = 
+    createCheckbox('show-norm', 'Normal Curve', showNormal, 'show-normal-checkbox');
+  
+  controls2.appendChild(fullGroup);
+  controls2.appendChild(restGroup);
+  controls2.appendChild(normGroup);
+  
+  // Clear restrictions button
+  const clearButton = document.createElement('button');
+  clearButton.className = 'widget-button';
+  clearButton.textContent = 'Clear Restrictions';
+  clearButton.setAttribute('data-testid', 'clear-restrictions-button');
+  controls2.appendChild(clearButton);
+  
+  if (advanced) container.appendChild(controls2);
+  
+  // Restrictions container
+  const restrictionsContainer = document.createElement('div');
+  restrictionsContainer.style.marginBottom = '1rem';
+  restrictionsContainer.style.padding = '0.5rem';
+  restrictionsContainer.style.border = '1px solid var(--widget-border-light)';
+  restrictionsContainer.style.borderRadius = '4px';
+  restrictionsContainer.style.background = 'var(--widget-bg-secondary)';
+  restrictionsContainer.setAttribute('data-testid', 'restrictions-container');
+  
+  const restrictionsTitle = document.createElement('div');
+  restrictionsTitle.className = 'widget-label';
+  restrictionsTitle.style.fontWeight = 'bold';
+  restrictionsTitle.style.marginBottom = '0.5rem';
+  restrictionsTitle.textContent = 'Restrictions:';
+  restrictionsContainer.appendChild(restrictionsTitle);
+  
+  const restrictionsRows = document.createElement('div');
+  restrictionsRows.setAttribute('data-testid', 'restrictions-rows');
+  restrictionsContainer.appendChild(restrictionsRows);
+  
+  // Add restriction button
+  const addRestrictionButton = document.createElement('button');
+  addRestrictionButton.className = 'widget-button';
+  addRestrictionButton.textContent = '+ Add Restriction';
+  addRestrictionButton.style.marginTop = '0.5rem';
+  addRestrictionButton.setAttribute('data-testid', 'add-restriction-button');
+  restrictionsContainer.appendChild(addRestrictionButton);
+  
+  if (advanced) container.appendChild(restrictionsContainer);
+  
   // Stats display
-  const statsDisplay = document.createElement('div');
-  statsDisplay.className = 'widget-display';
-  statsDisplay.style.fontWeight = 'normal';
-  statsDisplay.style.fontSize = '0.9em';
-  statsDisplay.setAttribute('data-testid', 'stats-display');
-  container.appendChild(statsDisplay);
+  const stats = document.createElement('div');
+  stats.className = 'widget-summary';
+  stats.setAttribute('data-testid', 'stats-display');
+  container.appendChild(stats);
 
   // Proportion display
   const propDisplay = document.createElement('div');
-  propDisplay.className = 'widget-display';
+  propDisplay.className = 'widget-summary';
   propDisplay.setAttribute('data-testid', 'prop-display');
-  container.appendChild(propDisplay);
+  if (!advanced) container.appendChild(propDisplay);
 
-  // SVG container
-  const svgContainer = document.createElement('div');
-  svgContainer.className = 'widget-chart-container';
-  container.appendChild(svgContainer);
-
-  const svg = select(svgContainer)
-    .append('svg')
-    .attr('width', '100%')
-    .attr('height', 400);
-
-  // Update display
-  function update() {
-    const width = svgContainer.clientWidth;
-    const height = 400;
-
-    const xLabel = model.get('xLabel') || selectedVariable;
-
-    renderHistogram(svg, width, height, data, numBins, lo, hi, xLabel);
-
-    // Helper to format numbers reasonably
-    const formatNum = (n) => {
-      if (Math.abs(n) >= 10000 || (Math.abs(n) < 0.01 && n !== 0)) {
-        return n.toExponential(2);
-      }
-      return Number.isInteger(n) ? n.toString() : n.toFixed(3).replace(/\.?0+$/, '');
-    };
-
-    const prop = calculateProportion(data, lo, hi);
-    const count = Math.round(prop * data.length);
-    propDisplay.textContent = `Selected area: ${(prop * 100).toFixed(2)}% (${count}/${data.length} values)`;
-
-    if (data.length > 0) {
-      const mean = data.reduce((a, b) => a + b, 0) / data.length;
-      const sd = Math.sqrt(data.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / data.length);
-      statsDisplay.textContent = `N = ${data.length}, Mean = ${formatNum(mean)}, SD = ${formatNum(sd)}`;
-    } else {
-      statsDisplay.textContent = 'No data';
-    }
-  }
+  
+  // Chart container
+  const chartContainer = document.createElement('div');
+  chartContainer.className = 'widget-chart-container';
+  chartContainer.setAttribute('data-testid', 'chart-container');
+  container.appendChild(chartContainer);
+  
+  // SVG for chart
+  const svg = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+  svg.style.width = '100%';
+  svg.style.height = '400px';
+  chartContainer.appendChild(svg);
+  
 
   // Helper to show the data table modal
   function showDataModal() {
-    if (!selectedDataset || selectedDataset.length === 0) return;
+    if (!data || data.length === 0) return;
 
-    // Create modal overlay
     const overlay = document.createElement('div');
     overlay.className = 'widget-modal-overlay';
     
-    // Create modal content
     const modalContent = document.createElement('div');
     modalContent.className = 'widget-modal-content';
 
-    // Header
     const header = document.createElement('div');
     header.className = 'widget-modal-header';
     
     const title = document.createElement('h3');
     title.className = 'widget-modal-title';
-    title.textContent = `Data: ${selectedDatasetName}`;
+    title.textContent = `Data: ${currentDataset}`;
     
     const closeBtn = document.createElement('button');
     closeBtn.className = 'widget-modal-close';
@@ -402,20 +302,16 @@ async function render({ model, el }) {
     header.appendChild(closeBtn);
     modalContent.appendChild(header);
 
-    // Table container (for scroll)
     const tableContainer = document.createElement('div');
     tableContainer.style.overflowX = 'auto';
 
-    // Table
     const table = document.createElement('table');
     table.className = 'widget-table';
     
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
     
-    // Determine columns
-    const firstRow = selectedDataset[0];
-    const columns = typeof firstRow === 'object' ? Object.keys(firstRow) : ['value'];
+    const columns = variables.length > 0 ? variables : ['value'];
 
     columns.forEach(col => {
       const th = document.createElement('th');
@@ -426,7 +322,7 @@ async function render({ model, el }) {
     table.appendChild(thead);
 
     const tbody = document.createElement('tbody');
-    selectedDataset.forEach(row => {
+    data.forEach(row => {
       const tr = document.createElement('tr');
       columns.forEach(col => {
         const td = document.createElement('td');
@@ -441,7 +337,6 @@ async function render({ model, el }) {
     modalContent.appendChild(tableContainer);
     overlay.appendChild(modalContent);
     
-    // Close on overlay click
     overlay.onclick = (e) => {
       if (e.target === overlay) {
         document.body.removeChild(overlay);
@@ -468,23 +363,20 @@ async function render({ model, el }) {
 
   // Helper to show univariate stats modal
   function showStatsModal() {
-    if (!selectedDataset || selectedDataset.length === 0) return;
+    if (!data || data.length === 0) return;
 
-    // Create modal overlay
     const overlay = document.createElement('div');
     overlay.className = 'widget-modal-overlay';
     
-    // Create modal content
     const modalContent = document.createElement('div');
     modalContent.className = 'widget-modal-content';
 
-    // Header
     const header = document.createElement('div');
     header.className = 'widget-modal-header';
     
     const title = document.createElement('h3');
     title.className = 'widget-modal-title';
-    title.textContent = `Univariate Statistics: ${selectedDatasetName}`;
+    title.textContent = `Univariate Statistics: ${currentDataset}`;
     
     const closeBtn = document.createElement('button');
     closeBtn.className = 'widget-modal-close';
@@ -495,18 +387,15 @@ async function render({ model, el }) {
     header.appendChild(closeBtn);
     modalContent.appendChild(header);
 
-    // Table container
     const tableContainer = document.createElement('div');
     tableContainer.style.overflowX = 'auto';
 
-    // Table
     const table = document.createElement('table');
     table.className = 'widget-table';
     
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
     
-    // Columns
     const statCols = ['Variable', 'Cases', 'Mean', 'SD', 'Min', 'LQ', 'Median', 'UQ', 'Max'];
     statCols.forEach(col => {
       const th = document.createElement('th');
@@ -518,17 +407,16 @@ async function render({ model, el }) {
 
     const tbody = document.createElement('tbody');
 
-    // Calculate stats for all numeric variables
-    variables.forEach(variable => {
-      const varData = getVariableData(selectedDataset, variable);
+    variables.forEach(v => {
+      const varData = data.map(row => parseFloat(row[v])).filter(val => !isNaN(val));
       if (varData.length === 0) return;
 
       const sortedData = [...varData].sort((a, b) => a - b);
       const n = varData.length;
-      const mean = varData.reduce((a, b) => a + b, 0) / n;
-      const sd = Math.sqrt(varData.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / n);
-      const min = sortedData[0];
-      const max = sortedData[n - 1];
+      const m = mean(varData);
+      const sd = sampleSD(varData);
+      const mn = sortedData[0];
+      const mx = sortedData[n - 1];
       const lq = getPercentile(sortedData, 25);
       const median = getPercentile(sortedData, 50);
       const uq = getPercentile(sortedData, 75);
@@ -536,14 +424,14 @@ async function render({ model, el }) {
       const tr = document.createElement('tr');
       
       const tdVar = document.createElement('td');
-      tdVar.textContent = variable;
+      tdVar.textContent = v;
       tr.appendChild(tdVar);
 
       const tdN = document.createElement('td');
       tdN.textContent = n;
       tr.appendChild(tdN);
 
-      [mean, sd, min, lq, median, uq, max].forEach(val => {
+      [m, sd, mn, lq, median, uq, mx].forEach(val => {
         const td = document.createElement('td');
         td.textContent = Number.isInteger(val) ? val : val.toFixed(2);
         tr.appendChild(td);
@@ -558,7 +446,6 @@ async function render({ model, el }) {
     modalContent.appendChild(tableContainer);
     overlay.appendChild(modalContent);
     
-    // Close on overlay click
     overlay.onclick = (e) => {
       if (e.target === overlay) {
         document.body.removeChild(overlay);
@@ -568,72 +455,522 @@ async function render({ model, el }) {
     document.body.appendChild(overlay);
   }
 
-  // Event listeners
-  dataSelect.addEventListener('change', () => {
-    selectedDatasetName = dataSelect.value;
-    selectedDataset = datasets[selectedDatasetName];
+  /**
+   * Load a dataset by name
+   */
+  function loadDataset(name) {
+    data = datasets[name] || [];
+    currentDataset = name;
     
-    variables = getNumericVariables(selectedDataset);
-    selectedVariable = variables.includes(selectedVariable) ? selectedVariable : variables[0];
-    populateVariableDropdown();
-    
-    data = getVariableData(selectedDataset, selectedVariable);
-    
-    // reset bounds
-    const dataMin = Math.min(...data);
-    const dataMax = Math.max(...data);
-    const range = dataMax - dataMin;
-    lo = dataMin + range * 0.25;
-    hi = dataMax - range * 0.25;
-    
-    const newStep = getOptimalStep(data);
-    loInput.step = newStep;
-    hiInput.step = newStep;
-    
-    loInput.value = lo.toFixed(5).replace(/\.?0+$/, '');
-    hiInput.value = hi.toFixed(5).replace(/\.?0+$/, '');
-    
-    update();
-  });
-
-  varSelect.addEventListener('change', () => {
-    selectedVariable = varSelect.value;
-    data = getVariableData(selectedDataset, selectedVariable);
-    
-    // reset bounds
-    const dataMin = Math.min(...data);
-    const dataMax = Math.max(...data);
-    const range = dataMax - dataMin;
-    lo = dataMin + range * 0.25;
-    hi = dataMax - range * 0.25;
-    
-    const newStep = getOptimalStep(data);
-    loInput.step = newStep;
-    hiInput.step = newStep;
-    
-    loInput.value = lo.toFixed(5).replace(/\.?0+$/, '');
-    hiInput.value = hi.toFixed(5).replace(/\.?0+$/, '');
-    
-    update();
-  });
-
-  binsInput.addEventListener('input', () => {
-    const newBins = parseInt(binsInput.value);
-    if (newBins >= 5 && newBins <= 50) {
-      numBins = newBins;
-      update();
+    // Filter to only numeric variables
+    if (data.length > 0) {
+      const allVars = Object.keys(data[0]);
+      variables = allVars.filter(v => {
+        const val = data[0][v];
+        return typeof val === 'number' || !isNaN(parseFloat(val));
+      });
+    } else {
+      variables = [];
     }
+    
+    // Set default variable if not set or doesn't exist in new dataset
+    if ((!variable || !variables.includes(variable)) && variables.length > 0) {
+      variable = variables[0];
+    }
+    
+    updateVariableSelector();
+    const firstVar = variables[0];
+    const values = firstVar ? data.map(row => parseFloat(row[firstVar])).filter(v => !isNaN(v)) : [];
+
+    if (!advanced && values.length > 0) {
+      const dataMin = Math.min(...values);
+      const dataMax = Math.max(...values);
+      const range = dataMax - dataMin;
+      if (lo === null) lo = dataMin + range * 0.25;
+      if (hi === null) hi = dataMax - range * 0.25;
+      loInput.value = lo.toFixed(5).replace(/\.?0+$/, '');
+      hiInput.value = hi.toFixed(5).replace(/\.?0+$/, '');
+    }
+
+    updateRestrictions();
+  }
+  
+  /**
+   * Update variable selector options
+   */
+  function updateVariableSelector() {
+    // Clear existing options
+    varSelect.innerHTML = '';
+    
+    variables.forEach(v => {
+      const option = document.createElement('option');
+      option.value = v;
+      option.textContent = v;
+      if (v === variable) option.selected = true;
+      varSelect.appendChild(option);
+    });
+  }
+  
+
+  /**
+   * Get restricted dataset
+   */
+  function getRestrictedData() {
+    if (!advanced && lo !== null && hi !== null) {
+      return data.filter(row => {
+        const val = parseFloat(row[variable]);
+        if (isNaN(val)) return false;
+        return val >= lo && val <= hi;
+      });
+    }
+
+    const result = data.filter(row => {
+
+      return restrictions.every(r => {
+        const val = parseFloat(row[r.variable]);
+        if (isNaN(val)) {
+          return false;
+        }
+        if (r.use_min && val < r.min) {
+          return false;
+        }
+        if (r.use_max && val > r.max) {
+          return false;
+        }
+        return true;
+      });
+    });
+    return result;
+  }
+  
+  /**
+   * Extract values for histogram
+   */
+  function getValues(dataset) {
+    return dataset
+      .map(row => parseFloat(row[variable]))
+      .filter(v => !isNaN(v));
+  }
+  
+  /**
+   * Compute histogram bins
+   */
+  function computeHistogram(values, numBins, domain) {
+    if (values.length === 0 || numBins <= 0) return [];
+    
+    const [min, max] = domain;
+    const binWidth = (max - min) / numBins;
+    
+    const binCounts = new Array(numBins).fill(0);
+    
+    for (const val of values) {
+      if (val < min || val > max) continue;
+      let binIndex = Math.floor((val - min) / binWidth);
+      if (binIndex >= numBins) binIndex = numBins - 1;
+      if (binIndex < 0) binIndex = 0;
+      binCounts[binIndex]++;
+    }
+    
+    const binsData = [];
+    for (let i = 0; i < numBins; i++) {
+      const binStart = min + i * binWidth;
+      const binEnd = binStart + binWidth;
+      binsData.push({
+        start: binStart,
+        end: binEnd,
+        mid: (binStart + binEnd) / 2,
+        count: binCounts[i],
+        density: binCounts[i] / (values.length * binWidth)
+      });
+    }
+    
+    return binsData;
+  }
+  
+  /**
+   * Update stats display
+   */
+  function updateStats() {
+    const fullValues = getValues(data);
+    const restrictedValues = getValues(getRestrictedData());
+    
+    if (fullValues.length === 0) {
+      stats.textContent = 'No data';
+      return;
+    }
+    
+    const fullMean = mean(fullValues);
+    const fullSD = sampleSD(fullValues);
+    
+    let text = `Full: n=${fullValues.length}, mean=${fullMean.toFixed(2)}, SD=${fullSD.toFixed(2)}`;
+    
+    if (restrictedValues.length > 0 && restrictedValues.length !== fullValues.length) {
+      const restMean = mean(restrictedValues);
+      const restSD = sampleSD(restrictedValues);
+      text += ` | Restricted: n=${restrictedValues.length}, mean=${restMean.toFixed(2)}, SD=${restSD.toFixed(2)}`;
+    }
+    
+    stats.textContent = text;
+
+    if (!advanced && propDisplay) {
+      const prop = fullValues.length > 0 ? restrictedValues.length / fullValues.length : 0;
+      propDisplay.textContent = `Selected area: ${(prop * 100).toFixed(2)}% (${restrictedValues.length}/${fullValues.length} values)`;
+      stats.style.display = 'none'; // hide normal stats in simple mode
+    } else if (advanced) {
+      if (propDisplay) propDisplay.style.display = 'none';
+      stats.style.display = 'block';
+    }
+
+  }
+  
+  /**
+   * Render histograms
+   */
+  function renderChart() {
+    // Clear SVG
+    while (svg.firstChild) {
+      svg.removeChild(svg.firstChild);
+    }
+    
+    const fullValues = getValues(data);
+    const restrictedValues = getValues(getRestrictedData());
+    
+    if (fullValues.length === 0) {
+      return;
+    }
+    
+    // Get dimensions
+    const containerRect = chartContainer.getBoundingClientRect();
+    const width = containerRect.width || 800; // fallback if 0
+    const height = 400; // fixed height as requested
+    const margin = { top: 20, right: 20, bottom: 50, left: 60 };
+    const chartWidth = width - margin.left - margin.right;
+    const chartHeight = height - margin.top - margin.bottom;
+    
+    // Compute domain
+    const allValues = fullValues;
+    const min = Math.min(...allValues);
+    const max = Math.max(...allValues);
+    const padding = (max - min) * 0.05 || 1;
+    const domain = [min - padding, max + padding];
+    
+    // Compute histograms
+    const fullBins = computeHistogram(fullValues, bins, domain);
+    const restrictedBins = restrictedValues.length > 0 
+      ? computeHistogram(restrictedValues, bins, domain) 
+      : [];
+    
+    // Find max count for y-scale
+    const maxCount = Math.max(
+      ...fullBins.map(b => b.count),
+      ...restrictedBins.map(b => b.count),
+      1
+    );
+    
+    // Scales
+    const xScale = (value) => margin.left + ((value - domain[0]) / (domain[1] - domain[0])) * chartWidth;
+    const yScale = (count) => margin.top + chartHeight - (count / maxCount) * chartHeight;
+    
+    const chartGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+    
+    // Get CSS vars for colors
+    const primaryColor = getCSSVar('--widget-primary');
+    const borderColor = getCSSVar('--widget-border-dark');
+    const accentColor = getCSSVar('--widget-accent');
+    const chartLineColor = getCSSVar('--widget-chart-line');
+    const textColor = getCSSVar('--widget-text-primary');
+    
+    // Draw full histogram
+    if (showFull) {
+      fullBins.forEach(bin => {
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('x', xScale(bin.start));
+        rect.setAttribute('y', yScale(bin.count));
+        rect.setAttribute('width', Math.max(1, xScale(bin.end) - xScale(bin.start) - 1));
+        rect.setAttribute('height', margin.top + chartHeight - yScale(bin.count));
+        rect.setAttribute('fill', primaryColor);
+        rect.setAttribute('fill-opacity', '0.6');
+        rect.setAttribute('stroke', borderColor);
+        rect.setAttribute('stroke-width', '1');
+        rect.setAttribute('data-testid', 'full-bar');
+        chartGroup.appendChild(rect);
+      });
+    }
+    
+    // Draw restricted histogram - on top
+    if (showRestricted && restrictedBins.length > 0) {
+      restrictedBins.forEach(bin => {
+        const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        rect.setAttribute('x', xScale(bin.start));
+        rect.setAttribute('y', yScale(bin.count));
+        rect.setAttribute('width', Math.max(1, xScale(bin.end) - xScale(bin.start) - 1));
+        rect.setAttribute('height', margin.top + chartHeight - yScale(bin.count));
+        rect.setAttribute('fill', '#22c55e'); // Greenish color to distinguish from primary
+        rect.setAttribute('fill-opacity', '0.6');
+        rect.setAttribute('stroke', borderColor);
+        rect.setAttribute('stroke-width', '1');
+        rect.setAttribute('data-testid', 'restricted-bar');
+        chartGroup.appendChild(rect);
+      });
+    }
+    
+    // Draw normal curve overlay
+    if (showNormal) {
+      const mu = mean(fullValues);
+      const sigma = sampleSD(fullValues);
+      const n = fullValues.length;
+      const binWidth = (domain[1] - domain[0]) / bins;
+      const scaleFactor = n * binWidth;
+      
+      const points = [];
+      const numPoints = 200;
+      for (let i = 0; i <= numPoints; i++) {
+        const x = domain[0] + (i / numPoints) * (domain[1] - domain[0]);
+        const density = normalPDF(x, mu, sigma);
+        const y = density * scaleFactor;
+        points.push({ x, y });
+      }
+      
+      let pathD = '';
+      points.forEach((p, i) => {
+        const px = xScale(p.x);
+        const py = yScale(p.y);
+        pathD += (i === 0 ? 'M' : 'L') + px + ',' + py;
+      });
+      
+      const path = document.createElementNS('http://www.w3.org/2000/svg', 'path');
+      path.setAttribute('d', pathD);
+      path.setAttribute('fill', 'none');
+      path.setAttribute('stroke', chartLineColor);
+      path.setAttribute('stroke-width', '2');
+      path.setAttribute('data-testid', 'normal-curve');
+      chartGroup.appendChild(path);
+    }
+    
+    // Draw axes
+    const xAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    xAxis.setAttribute('x1', margin.left);
+    xAxis.setAttribute('y1', margin.top + chartHeight);
+    xAxis.setAttribute('x2', margin.left + chartWidth);
+    xAxis.setAttribute('y2', margin.top + chartHeight);
+    xAxis.setAttribute('stroke', borderColor);
+    xAxis.setAttribute('stroke-width', '1');
+    chartGroup.appendChild(xAxis);
+    
+    const yAxis = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    yAxis.setAttribute('x1', margin.left);
+    yAxis.setAttribute('y1', margin.top);
+    yAxis.setAttribute('x2', margin.left);
+    yAxis.setAttribute('y2', margin.top + chartHeight);
+    yAxis.setAttribute('stroke', borderColor);
+    yAxis.setAttribute('stroke-width', '1');
+    chartGroup.appendChild(yAxis);
+    
+    // Axis labels
+    const xTicks = [domain[0], (domain[0] + domain[1]) / 2, domain[1]];
+    xTicks.forEach(tick => {
+      const label = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+      label.setAttribute('x', xScale(tick));
+      label.setAttribute('y', margin.top + chartHeight + 20);
+      label.setAttribute('text-anchor', 'middle');
+      label.setAttribute('fill', textColor);
+      label.setAttribute('font-size', '12px');
+      label.textContent = tick.toFixed(1);
+      chartGroup.appendChild(label);
+    });
+    
+    // Axis title
+    const xLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    xLabel.setAttribute('x', margin.left + chartWidth / 2);
+    xLabel.setAttribute('y', margin.top + chartHeight + 40);
+    xLabel.setAttribute('text-anchor', 'middle');
+    xLabel.setAttribute('fill', textColor);
+    xLabel.setAttribute('font-size', '14px');
+    xLabel.textContent = variable || '';
+    chartGroup.appendChild(xLabel);
+    
+    const yLabel = document.createElementNS('http://www.w3.org/2000/svg', 'text');
+    yLabel.setAttribute('x', margin.left - 45);
+    yLabel.setAttribute('y', margin.top + chartHeight / 2);
+    yLabel.setAttribute('text-anchor', 'middle');
+    yLabel.setAttribute('fill', textColor);
+    yLabel.setAttribute('font-size', '14px');
+    yLabel.setAttribute('transform', `rotate(-90, ${margin.left - 45}, ${margin.top + chartHeight / 2})`);
+    yLabel.textContent = 'Count';
+    chartGroup.appendChild(yLabel);
+    
+    svg.appendChild(chartGroup);
+  }
+  
+  /**
+   * Update restrictions UI
+   */
+  function updateRestrictions() {
+    // Clear existing rows
+    while (restrictionsRows.firstChild) {
+      restrictionsRows.removeChild(restrictionsRows.firstChild);
+    }
+    
+    restrictions.forEach((r, index) => {
+      const row = document.createElement('div');
+      row.className = 'widget-controls';
+      row.style.marginBottom = '0.5rem';
+      row.setAttribute('data-testid', `restriction-row-${index}`);
+      
+      // Variable selector
+      const varSelect = document.createElement('select');
+      varSelect.className = 'widget-select';
+      varSelect.style.fontSize = '12px';
+      varSelect.setAttribute('data-testid', `restriction-var-${index}`);
+      variables.forEach(v => {
+        const option = document.createElement('option');
+        option.value = v;
+        option.textContent = v;
+        if (v === r.variable) option.selected = true;
+        varSelect.appendChild(option);
+      });
+      varSelect.addEventListener('change', () => {
+        r.variable = varSelect.value;
+        model.set('restrictions', restrictions);
+        renderChart();
+        updateStats();
+      });
+      row.appendChild(varSelect);
+      
+      // Min checkbox
+      const minGroup = document.createElement('div');
+      minGroup.className = 'widget-checkbox';
+      const minCheckbox = document.createElement('input');
+      minCheckbox.type = 'checkbox';
+      minCheckbox.checked = r.use_min;
+      minCheckbox.setAttribute('data-testid', `restriction-use-min-${index}`);
+      minCheckbox.addEventListener('change', () => {
+        r.use_min = minCheckbox.checked;
+        model.set('restrictions', restrictions);
+        renderChart();
+        updateStats();
+      });
+      minGroup.appendChild(minCheckbox);
+      
+      const minLabel = document.createElement('label');
+      minLabel.textContent = 'min:';
+      minLabel.style.fontSize = '12px';
+      minGroup.appendChild(minLabel);
+      row.appendChild(minGroup);
+      
+      const minInput = document.createElement('input');
+      minInput.className = 'widget-input';
+      minInput.type = 'number';
+      minInput.value = r.min;
+      minInput.style.width = '80px';
+      minInput.style.fontSize = '12px';
+      minInput.setAttribute('data-testid', `restriction-min-${index}`);
+      minInput.addEventListener('input', () => {
+        r.min = parseFloat(minInput.value);
+        model.set('restrictions', restrictions);
+        renderChart();
+        updateStats();
+      });
+      row.appendChild(minInput);
+      
+      // Max checkbox
+      const maxGroup = document.createElement('div');
+      maxGroup.className = 'widget-checkbox';
+      const maxCheckbox = document.createElement('input');
+      maxCheckbox.type = 'checkbox';
+      maxCheckbox.checked = r.use_max;
+      maxCheckbox.setAttribute('data-testid', `restriction-use-max-${index}`);
+      maxCheckbox.addEventListener('change', () => {
+        r.use_max = maxCheckbox.checked;
+        model.set('restrictions', restrictions);
+        renderChart();
+        updateStats();
+      });
+      maxGroup.appendChild(maxCheckbox);
+      
+      const maxLabel = document.createElement('label');
+      maxLabel.textContent = 'max:';
+      maxLabel.style.fontSize = '12px';
+      maxGroup.appendChild(maxLabel);
+      row.appendChild(maxGroup);
+      
+      const maxInput = document.createElement('input');
+      maxInput.className = 'widget-input';
+      maxInput.type = 'number';
+      maxInput.value = r.max;
+      maxInput.style.width = '80px';
+      maxInput.style.fontSize = '12px';
+      maxInput.setAttribute('data-testid', `restriction-max-${index}`);
+      maxInput.addEventListener('input', () => {
+        r.max = parseFloat(maxInput.value);
+        model.set('restrictions', restrictions);
+        renderChart();
+        updateStats();
+      });
+      row.appendChild(maxInput);
+      
+      // Remove button
+      const removeButton = document.createElement('button');
+      removeButton.className = 'widget-button';
+      removeButton.textContent = '×';
+      removeButton.style.padding = '2px 8px';
+      removeButton.style.fontWeight = 'bold';
+      removeButton.setAttribute('data-testid', `restriction-remove-${index}`);
+      removeButton.addEventListener('click', () => {
+        restrictions.splice(index, 1);
+        model.set('restrictions', restrictions);
+        updateRestrictions();
+        renderChart();
+        updateStats();
+      });
+      row.appendChild(removeButton);
+      
+      restrictionsRows.appendChild(row);
+    });
+  }
+  
+  // Event handlers
+  if (datasetSelect) {
+    datasetSelect.addEventListener('change', () => {
+      const selectedDataset = datasetSelect.value;
+      loadDataset(selectedDataset);
+      renderChart();
+      updateStats();
+    });
+  }
+  
+  varSelect.addEventListener('change', () => {
+    variable = varSelect.value;
+    model.set('variable', variable);
+    const values = data.map(row => parseFloat(row[variable])).filter(v => !isNaN(v));
+    
+    if (!advanced && values.length > 0) {
+      const dataMin = Math.min(...values);
+      const dataMax = Math.max(...values);
+      const range = dataMax - dataMin;
+      if (lo === null) lo = dataMin + range * 0.25;
+      if (hi === null) hi = dataMax - range * 0.25;
+      loInput.value = lo.toFixed(5).replace(/\.?0+$/, '');
+      hiInput.value = hi.toFixed(5).replace(/\.?0+$/, '');
+    }
+
+    renderChart();
+    updateStats();
   });
+  
 
   loInput.addEventListener('input', () => {
     const newLo = parseFloat(loInput.value);
     if (!isNaN(newLo)) {
       lo = newLo;
-      if (lo > hi) {
+      if (hi !== null && lo > hi) {
         hi = lo;
         hiInput.value = hi.toString();
+        model.set('hi', hi);
       }
-      update();
+      model.set('lo', lo);
+      renderChart();
+      updateStats();
     }
   });
 
@@ -641,34 +978,102 @@ async function render({ model, el }) {
     const newHi = parseFloat(hiInput.value);
     if (!isNaN(newHi)) {
       hi = newHi;
-      if (hi < lo) {
+      if (lo !== null && hi < lo) {
         lo = hi;
         loInput.value = lo.toString();
+        model.set('lo', lo);
       }
-      update();
+      model.set('hi', hi);
+      renderChart();
+      updateStats();
     }
   });
 
   listDataBtn.addEventListener('click', showDataModal);
   statsBtn.addEventListener('click', showStatsModal);
 
-  // Append to element
-  el.appendChild(container);
-
-  // Handle resize (width only)
-  const resizeObserver = new ResizeObserver(() => {
-    update();
+  binsInput.addEventListener('input', () => {
+    bins = parseInt(binsInput.value, 10);
+    if (bins < 5) bins = 5;
+    if (bins > 100) bins = 100;
+    binsInput.value = bins;
+    model.set('bins', bins);
+    renderChart();
   });
-  resizeObserver.observe(svgContainer);
-
-  // Initial render
-  update();
-
+  
+  fullCheckbox.addEventListener('change', () => {
+    showFull = fullCheckbox.checked;
+    model.set('show_full', showFull);
+    renderChart();
+  });
+  
+  restCheckbox.addEventListener('change', () => {
+    showRestricted = restCheckbox.checked;
+    model.set('show_restricted', showRestricted);
+    renderChart();
+  });
+  
+  normCheckbox.addEventListener('change', () => {
+    showNormal = normCheckbox.checked;
+    model.set('show_normal', showNormal);
+    renderChart();
+  });
+  
+  clearButton.addEventListener('click', () => {
+    restrictions = [];
+    model.set('restrictions', restrictions);
+    updateRestrictions();
+    renderChart();
+    updateStats();
+  });
+  
+  addRestrictionButton.addEventListener('click', () => {
+    if (variables.length === 0) return;
+    
+    // Find min/max for the first variable
+    const firstVar = variables[0];
+    const values = data.map(row => parseFloat(row[firstVar])).filter(v => !isNaN(v));
+    const min = Math.min(...values);
+    const max = Math.max(...values);
+    
+    restrictions.push({
+      variable: firstVar,
+      use_min: false,
+      min: min,
+      use_max: false,
+      max: max
+    });
+    model.set('restrictions', restrictions);
+    updateRestrictions();
+    renderChart();
+    updateStats();
+  });
+  
+  el.appendChild(container);
+  
+  // Initial load
+  loadDataset(currentDataset);
+  updateRestrictions();
+  renderChart();
+  updateStats();
+  
+  // Handle resize (width only) to avoid infinite loops
+  let lastWidth = chartContainer.clientWidth;
+  const resizeObserver = new ResizeObserver((entries) => {
+    for (const entry of entries) {
+      const newWidth = entry.contentRect.width;
+      if (newWidth > 0 && newWidth !== lastWidth) {
+        lastWidth = newWidth;
+        renderChart();
+      }
+    }
+  });
+  resizeObserver.observe(chartContainer);
+  
   // Cleanup
   return () => {
     resizeObserver.disconnect();
   };
 }
-
 
 export default { render };

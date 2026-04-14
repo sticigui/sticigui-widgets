@@ -36,7 +36,6 @@ Data histogram with adjustable bin width and optional normal overlay.
 :::
 
 :::{card} Histogram Control
-:link: hist-control.md
 Histogram with data filtering and subset comparison.
 :::
 
