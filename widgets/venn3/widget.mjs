@@ -288,47 +288,68 @@ export function render({ model, el }) {
   
   container.appendChild(controls);
   
-  // Highlight buttons
-  const highlightRow = document.createElement('div');
-  highlightRow.style.marginBottom = '1rem';
-  highlightRow.style.display = 'flex';
-  highlightRow.style.gap = '0.5rem';
-  highlightRow.style.flexWrap = 'wrap';
-  
+
   const highlightOptions = [
     { value: 'A', label: 'A' },
     { value: 'B', label: 'B' },
     { value: 'C', label: 'C' },
+    { value: 'Ac', label: 'Ac' },
+    { value: 'Bc', label: 'Bc' },
+    { value: 'Cc', label: 'Cc' },
     { value: 'AB', label: 'A∩B' },
     { value: 'AC', label: 'A∩C' },
     { value: 'BC', label: 'B∩C' },
+    { value: 'AorB', label: 'A∪B' },
+    { value: 'AorC', label: 'A∪C' },
+    { value: 'BorC', label: 'B∪C' },
     { value: 'ABC', label: 'A∩B∩C' },
-    { value: 'S', label: 'S' }
+    { value: 'AorBorC', label: 'A∪B∪C' },
+    { value: 'ABc', label: 'A∩Bc' },
+    { value: 'AcB', label: 'Ac∩B' },
+    { value: 'AcBC', label: 'Ac∩B∩C' },
+    { value: 'AcorBC', label: 'Ac∪(B∩C)' },
+    { value: 'S', label: 'S' },
+    { value: 'empty', label: '{}' },
+    { value: 'PA_B', label: 'P(A|B)' },
+    { value: 'PAc_B', label: 'P(Ac|B)' },
+    { value: 'PB_A', label: 'P(B|A)' },
+    { value: 'PA_BC', label: 'P(A|BC)' },
+    { value: 'PAc_BC', label: 'P(Ac|BC)' },
+    { value: 'PA_BorC', label: 'P(A|B∪C)' }
   ];
+
+  const highlightGroup = document.createElement('div');
+  highlightGroup.className = 'widget-input-group';
+  highlightGroup.style.marginBottom = '1rem';
+  
+  const highlightLabel = document.createElement('label');
+  highlightLabel.className = 'widget-label';
+  highlightLabel.textContent = 'Highlight:';
+  
+  const highlightSelect = document.createElement('select');
+  highlightSelect.className = 'widget-select';
+  highlightSelect.setAttribute('data-testid', 'highlight-select');
   
   highlightOptions.forEach(opt => {
-    const btn = document.createElement('button');
-    btn.className = opt.value === highlight ? 'widget-button widget-button-accent' : 'widget-button';
-    btn.textContent = opt.label;
-    btn.style.padding = '0.5rem 1rem';
-    btn.setAttribute('data-testid', `highlight-${opt.value}`);
-    btn.addEventListener('click', () => {
-      highlight = opt.value;
-      model.set('highlight', highlight);
-      updateHighlight();
-      updateButtons();
-    });
-    highlightRow.appendChild(btn);
+    const option = document.createElement('option');
+    option.value = opt.value;
+    option.innerHTML = opt.label;
+    if (opt.value === highlight) option.selected = true;
+    highlightSelect.appendChild(option);
   });
   
-  container.appendChild(highlightRow);
+  highlightSelect.addEventListener('change', () => {
+    highlight = highlightSelect.value;
+    model.set('highlight', highlight);
+    updateHighlight();
+  });
   
+  highlightGroup.appendChild(highlightLabel);
+  highlightGroup.appendChild(highlightSelect);
+  container.appendChild(highlightGroup);
+
   function updateButtons() {
-    const buttons = highlightRow.querySelectorAll('button');
-    buttons.forEach((btn, i) => {
-      const opt = highlightOptions[i];
-      btn.className = opt.value === highlight ? 'widget-button widget-button-accent' : 'widget-button';
-    });
+    highlightSelect.value = highlight;
   }
   
   // Probability display
@@ -469,111 +490,227 @@ export function render({ model, el }) {
     const highlightGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     highlightGroup.setAttribute('data-testid', 'highlight-region');
     
+
+    // SVG Mask Helpers for Complex Regions
+    let maskCounter = 0;
+    function createMask(includes, excludes) {
+      maskCounter++;
+      const maskId = 'mask_venn3_' + maskCounter;
+      const mask = document.createElementNS('http://www.w3.org/2000/svg', 'mask');
+      mask.setAttribute('id', maskId);
+      
+      const baseRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      baseRect.setAttribute('x', '0');
+      baseRect.setAttribute('y', '0');
+      baseRect.setAttribute('width', geom.width);
+      baseRect.setAttribute('height', geom.height);
+      baseRect.setAttribute('fill', includes.length === 0 ? 'white' : 'black');
+      mask.appendChild(baseRect);
+      
+      if (includes.length > 0) {
+        let parent = mask;
+        for (let i = 0; i < includes.length - 1; i++) {
+          const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+          g.setAttribute('clip-path', `url(#${includes[i]})`);
+          parent.appendChild(g);
+          parent = g;
+        }
+        const includeRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        includeRect.setAttribute('x', '0');
+        includeRect.setAttribute('y', '0');
+        includeRect.setAttribute('width', geom.width);
+        includeRect.setAttribute('height', geom.height);
+        includeRect.setAttribute('fill', 'white');
+        includeRect.setAttribute('clip-path', `url(#${includes[includes.length - 1]})`);
+        parent.appendChild(includeRect);
+      }
+      
+      excludes.forEach(ex => {
+        const excludeRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        excludeRect.setAttribute('x', '0');
+        excludeRect.setAttribute('y', '0');
+        excludeRect.setAttribute('width', geom.width);
+        excludeRect.setAttribute('height', geom.height);
+        excludeRect.setAttribute('fill', 'black');
+        excludeRect.setAttribute('clip-path', `url(#${ex})`);
+        mask.appendChild(excludeRect);
+      });
+      
+      defs.appendChild(mask);
+      return maskId;
+    }
+
+    function createUnionMask(regions) {
+      maskCounter++;
+      const maskId = 'maskUnion_' + maskCounter;
+      const mask = document.createElementNS('http://www.w3.org/2000/svg', 'mask');
+      mask.setAttribute('id', maskId);
+      
+      const baseRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      baseRect.setAttribute('x', '0');
+      baseRect.setAttribute('y', '0');
+      baseRect.setAttribute('width', geom.width);
+      baseRect.setAttribute('height', geom.height);
+      baseRect.setAttribute('fill', 'black');
+      mask.appendChild(baseRect);
+      
+      regions.forEach(inc => {
+        const incRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        incRect.setAttribute('x', '0');
+        incRect.setAttribute('y', '0');
+        incRect.setAttribute('width', geom.width);
+        incRect.setAttribute('height', geom.height);
+        incRect.setAttribute('fill', 'white');
+        incRect.setAttribute('clip-path', `url(#${inc})`);
+        mask.appendChild(incRect);
+      });
+      
+      defs.appendChild(mask);
+      return maskId;
+    }
+
+    function createAcorBCMask() {
+      maskCounter++;
+      const maskId = 'maskAcorBC_' + maskCounter;
+      const mask = document.createElementNS('http://www.w3.org/2000/svg', 'mask');
+      mask.setAttribute('id', maskId);
+      
+      const baseRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      baseRect.setAttribute('x', '0');
+      baseRect.setAttribute('y', '0');
+      baseRect.setAttribute('width', geom.width);
+      baseRect.setAttribute('height', geom.height);
+      baseRect.setAttribute('fill', 'white');
+      mask.appendChild(baseRect);
+      
+      const exclA = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      exclA.setAttribute('x', '0');
+      exclA.setAttribute('y', '0');
+      exclA.setAttribute('width', geom.width);
+      exclA.setAttribute('height', geom.height);
+      exclA.setAttribute('fill', 'black');
+      exclA.setAttribute('clip-path', 'url(#clipA)');
+      mask.appendChild(exclA);
+      
+      const gBC = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      gBC.setAttribute('clip-path', 'url(#clipB)');
+      const bcRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      bcRect.setAttribute('x', '0');
+      bcRect.setAttribute('y', '0');
+      bcRect.setAttribute('width', geom.width);
+      bcRect.setAttribute('height', geom.height);
+      bcRect.setAttribute('fill', 'white');
+      bcRect.setAttribute('clip-path', 'url(#clipC)');
+      gBC.appendChild(bcRect);
+      mask.appendChild(gBC);
+      
+      defs.appendChild(mask);
+      return maskId;
+    }
+
+    function createIntersectionUnionMask(intersectRegion, unionRegions) {
+      maskCounter++;
+      const maskId = 'maskIntUn_' + maskCounter;
+      const mask = document.createElementNS('http://www.w3.org/2000/svg', 'mask');
+      mask.setAttribute('id', maskId);
+      
+      const baseRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      baseRect.setAttribute('x', '0');
+      baseRect.setAttribute('y', '0');
+      baseRect.setAttribute('width', geom.width);
+      baseRect.setAttribute('height', geom.height);
+      baseRect.setAttribute('fill', 'black');
+      mask.appendChild(baseRect);
+      
+      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
+      g.setAttribute('clip-path', `url(#${intersectRegion})`);
+      
+      unionRegions.forEach(inc => {
+        const incRect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+        incRect.setAttribute('x', '0');
+        incRect.setAttribute('y', '0');
+        incRect.setAttribute('width', geom.width);
+        incRect.setAttribute('height', geom.height);
+        incRect.setAttribute('fill', 'white');
+        incRect.setAttribute('clip-path', `url(#${inc})`);
+        g.appendChild(incRect);
+      });
+      
+      mask.appendChild(g);
+      defs.appendChild(mask);
+      return maskId;
+    }
+
+    function fillMaskedRect(maskId, fill, opacity) {
+      const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+      rect.setAttribute('x', '0');
+      rect.setAttribute('y', '0');
+      rect.setAttribute('width', geom.width);
+      rect.setAttribute('height', geom.height);
+      rect.setAttribute('fill', fill);
+      rect.setAttribute('fill-opacity', opacity);
+      rect.setAttribute('mask', `url(#${maskId})`);
+      highlightGroup.appendChild(rect);
+    }
+
     if (highlight === 'A') {
-      // Entire circle A
-      const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-      rect.setAttribute('x', '0');
-      rect.setAttribute('y', '0');
-      rect.setAttribute('width', geom.width);
-      rect.setAttribute('height', geom.height);
-      rect.setAttribute('fill', 'yellow');
-      rect.setAttribute('fill-opacity', '0.5');
-      rect.setAttribute('clip-path', 'url(#clipA)');
-      highlightGroup.appendChild(rect);
+      fillMaskedRect(createMask(['clipA'], []), 'yellow', '0.5');
     } else if (highlight === 'B') {
-      // Entire circle B
-      const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-      rect.setAttribute('x', '0');
-      rect.setAttribute('y', '0');
-      rect.setAttribute('width', geom.width);
-      rect.setAttribute('height', geom.height);
-      rect.setAttribute('fill', 'yellow');
-      rect.setAttribute('fill-opacity', '0.5');
-      rect.setAttribute('clip-path', 'url(#clipB)');
-      highlightGroup.appendChild(rect);
+      fillMaskedRect(createMask(['clipB'], []), 'yellow', '0.5');
     } else if (highlight === 'C') {
-      // Entire circle C
-      const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-      rect.setAttribute('x', '0');
-      rect.setAttribute('y', '0');
-      rect.setAttribute('width', geom.width);
-      rect.setAttribute('height', geom.height);
-      rect.setAttribute('fill', 'yellow');
-      rect.setAttribute('fill-opacity', '0.5');
-      rect.setAttribute('clip-path', 'url(#clipC)');
-      highlightGroup.appendChild(rect);
+      fillMaskedRect(createMask(['clipC'], []), 'yellow', '0.5');
+    } else if (highlight === 'Ac') {
+      fillMaskedRect(createMask([], ['clipA']), 'yellow', '0.5');
+    } else if (highlight === 'Bc') {
+      fillMaskedRect(createMask([], ['clipB']), 'yellow', '0.5');
+    } else if (highlight === 'Cc') {
+      fillMaskedRect(createMask([], ['clipC']), 'yellow', '0.5');
     } else if (highlight === 'AB') {
-      // Intersection A ∩ B
-      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-      g.setAttribute('clip-path', 'url(#clipA)');
-      const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-      rect.setAttribute('x', '0');
-      rect.setAttribute('y', '0');
-      rect.setAttribute('width', geom.width);
-      rect.setAttribute('height', geom.height);
-      rect.setAttribute('fill', 'yellow');
-      rect.setAttribute('fill-opacity', '0.5');
-      rect.setAttribute('clip-path', 'url(#clipB)');
-      g.appendChild(rect);
-      highlightGroup.appendChild(g);
+      fillMaskedRect(createMask(['clipA', 'clipB'], []), 'yellow', '0.5');
     } else if (highlight === 'AC') {
-      // Intersection A ∩ C
-      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-      g.setAttribute('clip-path', 'url(#clipA)');
-      const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-      rect.setAttribute('x', '0');
-      rect.setAttribute('y', '0');
-      rect.setAttribute('width', geom.width);
-      rect.setAttribute('height', geom.height);
-      rect.setAttribute('fill', 'yellow');
-      rect.setAttribute('fill-opacity', '0.5');
-      rect.setAttribute('clip-path', 'url(#clipC)');
-      g.appendChild(rect);
-      highlightGroup.appendChild(g);
+      fillMaskedRect(createMask(['clipA', 'clipC'], []), 'yellow', '0.5');
     } else if (highlight === 'BC') {
-      // Intersection B ∩ C
-      const g = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-      g.setAttribute('clip-path', 'url(#clipB)');
-      const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-      rect.setAttribute('x', '0');
-      rect.setAttribute('y', '0');
-      rect.setAttribute('width', geom.width);
-      rect.setAttribute('height', geom.height);
-      rect.setAttribute('fill', 'yellow');
-      rect.setAttribute('fill-opacity', '0.5');
-      rect.setAttribute('clip-path', 'url(#clipC)');
-      g.appendChild(rect);
-      highlightGroup.appendChild(g);
+      fillMaskedRect(createMask(['clipB', 'clipC'], []), 'yellow', '0.5');
+    } else if (highlight === 'AorB') {
+      fillMaskedRect(createUnionMask(['clipA', 'clipB']), 'yellow', '0.5');
+    } else if (highlight === 'AorC') {
+      fillMaskedRect(createUnionMask(['clipA', 'clipC']), 'yellow', '0.5');
+    } else if (highlight === 'BorC') {
+      fillMaskedRect(createUnionMask(['clipB', 'clipC']), 'yellow', '0.5');
     } else if (highlight === 'ABC') {
-      // Intersection A ∩ B ∩ C (all three)
-      const g1 = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-      g1.setAttribute('clip-path', 'url(#clipA)');
-      
-      const g2 = document.createElementNS('http://www.w3.org/2000/svg', 'g');
-      g2.setAttribute('clip-path', 'url(#clipB)');
-      
-      const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-      rect.setAttribute('x', '0');
-      rect.setAttribute('y', '0');
-      rect.setAttribute('width', geom.width);
-      rect.setAttribute('height', geom.height);
-      rect.setAttribute('fill', 'yellow');
-      rect.setAttribute('fill-opacity', '0.5');
-      rect.setAttribute('clip-path', 'url(#clipC)');
-      
-      g2.appendChild(rect);
-      g1.appendChild(g2);
-      highlightGroup.appendChild(g1);
+      fillMaskedRect(createMask(['clipA', 'clipB', 'clipC'], []), 'yellow', '0.5');
+    } else if (highlight === 'AorBorC') {
+      fillMaskedRect(createUnionMask(['clipA', 'clipB', 'clipC']), 'yellow', '0.5');
+    } else if (highlight === 'ABc') {
+      fillMaskedRect(createMask(['clipA'], ['clipB']), 'yellow', '0.5');
+    } else if (highlight === 'AcB') {
+      fillMaskedRect(createMask(['clipB'], ['clipA']), 'yellow', '0.5');
+    } else if (highlight === 'AcBC') {
+      fillMaskedRect(createMask(['clipB', 'clipC'], ['clipA']), 'yellow', '0.5');
+    } else if (highlight === 'AcorBC') {
+      fillMaskedRect(createAcorBCMask(), 'yellow', '0.5');
     } else if (highlight === 'S') {
-      // Entire sample space
-      const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-      rect.setAttribute('x', '0');
-      rect.setAttribute('y', '0');
-      rect.setAttribute('width', geom.width);
-      rect.setAttribute('height', geom.height);
-      rect.setAttribute('fill', 'yellow');
-      rect.setAttribute('fill-opacity', '0.5');
-      highlightGroup.appendChild(rect);
+      fillMaskedRect(createMask([], []), 'yellow', '0.5');
+    } else if (highlight === 'empty') {
+      // empty is not highlighted
+    } else if (highlight === 'PA_B') {
+      fillMaskedRect(createMask(['clipB'], []), 'cyan', '0.5');
+      fillMaskedRect(createMask(['clipA', 'clipB'], []), 'yellow', '0.5');
+    } else if (highlight === 'PAc_B') {
+      fillMaskedRect(createMask(['clipB'], []), 'cyan', '0.5');
+      fillMaskedRect(createMask(['clipB'], ['clipA']), 'yellow', '0.5');
+    } else if (highlight === 'PB_A') {
+      fillMaskedRect(createMask(['clipA'], []), 'cyan', '0.5');
+      fillMaskedRect(createMask(['clipA', 'clipB'], []), 'yellow', '0.5');
+    } else if (highlight === 'PA_BC') {
+      fillMaskedRect(createMask(['clipB', 'clipC'], []), 'cyan', '0.5');
+      fillMaskedRect(createMask(['clipA', 'clipB', 'clipC'], []), 'yellow', '0.5');
+    } else if (highlight === 'PAc_BC') {
+      fillMaskedRect(createMask(['clipB', 'clipC'], []), 'cyan', '0.5');
+      fillMaskedRect(createMask(['clipB', 'clipC'], ['clipA']), 'yellow', '0.5');
+    } else if (highlight === 'PA_BorC') {
+      fillMaskedRect(createUnionMask(['clipB', 'clipC']), 'cyan', '0.5');
+      fillMaskedRect(createIntersectionUnionMask('clipA', ['clipB', 'clipC']), 'yellow', '0.5');
     }
     
     svg.appendChild(highlightGroup);
