@@ -20,21 +20,36 @@ import {
   mean,
   sampleSD
 } from '../../src/math/stats-math.mjs';
-import styles from './styles.css';
+import styles from '../../css/sticigui-tailwind.css';
 
 // Inject styles into document
-function injectStyles() {
-  if (!document.getElementById('prob-calc-styles')) {
+function injectStyles(el) {
+  if (!el.querySelector('.widget-styles')) {
     const styleEl = document.createElement('style');
-    styleEl.id = 'prob-calc-styles';
+    styleEl.className = 'widget-styles';
     styleEl.textContent = styles;
-    document.head.appendChild(styleEl);
+    el.appendChild(styleEl);
   }
 }
 
 // Helper to get CSS variable value
 function getCSSVar(name) {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const root = document.querySelector('.sg-widget-root') || document.documentElement;
+  const val = getComputedStyle(root).getPropertyValue(name).trim();
+  if (val) return val;
+  const fallbacks = {
+    '--widget-text-primary': '#000000',
+    '--widget-text-secondary': '#57534e',
+    '--widget-bg-primary': '#ffffff',
+    '--widget-bg-secondary': '#f5f5f4',
+    '--widget-border-light': '#d6d3d1',
+    '--widget-border-dark': '#44403c',
+    '--widget-accent': '#ea580c',
+    '--widget-primary': '#0ea5e9',
+    '--widget-primary-highlight': '#f97316',
+    '--widget-chart-line': '#dc2626'
+  };
+  return fallbacks[name] || '#000000';
 }
 
 /**
@@ -217,7 +232,7 @@ function calculateProbability(distribution, params, useLo, lo, useHi, hi) {
  */
 export function render({ model, el }) {
   // Inject CSS
-  injectStyles();
+  injectStyles(el);
   
   // Get initial state
   let title = model.get('title');
@@ -237,24 +252,24 @@ export function render({ model, el }) {
 
   // Container setup
   const container = document.createElement('div');
-  container.className = 'widget-container';
+  container.className = 'sg-font-sans sg-p-6 sg-max-w-[800px] sg-bg-white dark:sg-bg-stone-950 sg-rounded-xl sg-shadow-sm sg-border sg-border-slate-200 dark:sg-border-stone-800 sg-text-slate-900 dark:sg-text-stone-100 sg-widget-root sg-transition-colors';
 
   // Title (optional)
   if (title) {
     const titleEl = document.createElement('h3');
-    titleEl.className = 'widget-title';
+    titleEl.className = 'sg-m-0 sg-mb-6 sg-text-2xl sg-font-semibold sg-tracking-tight sg-text-slate-900 dark:sg-text-stone-100';
     titleEl.textContent = title;
     container.appendChild(titleEl);
   }
 
   // Distribution selector
   const distGroup = document.createElement('div');
-  distGroup.className = 'widget-input-group';
+  distGroup.className = 'sg-flex sg-items-center sg-gap-2.5';
   distGroup.style.marginBottom = '1rem';
   distGroup.style.display = presentationMode === 'sentence' ? 'inline-block' : 'block';
   
   const distLabel = document.createElement('label');
-  distLabel.className = 'widget-label';
+  distLabel.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300';
   if (presentationMode === 'sentence') {
     distLabel.textContent = 'If X has a ';
     distLabel.style.display = 'inline';
@@ -267,7 +282,7 @@ export function render({ model, el }) {
   }
   
   const distSelect = document.createElement('select');
-  distSelect.className = 'widget-select';
+  distSelect.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
   distSelect.style.width = presentationMode === 'sentence' ? 'auto' : '100%';
   distSelect.style.padding = '0.5rem';
   distSelect.style.fontSize = '1rem';
@@ -348,7 +363,7 @@ export function render({ model, el }) {
   if (presentationMode === 'table') loLabel.style.minWidth = '100px';
   
   const loInput = document.createElement('input');
-  loInput.className = 'widget-input';
+  loInput.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
   loInput.type = 'number';
   loInput.value = lo;
   loInput.step = '0.1';
@@ -393,7 +408,7 @@ export function render({ model, el }) {
   hiLabel.style.minWidth = '100px';
   
   const hiInput = document.createElement('input');
-  hiInput.className = 'widget-input';
+  hiInput.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
   hiInput.type = 'number';
   hiInput.value = hi;
   hiInput.step = '0.1';
@@ -481,7 +496,7 @@ export function render({ model, el }) {
       }
       
       const label = document.createElement('label');
-      label.className = 'widget-label';
+      label.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300';
       if (presentationMode === 'table') {
         label.textContent = paramDef.label;
         label.style.display = 'block';
@@ -494,7 +509,7 @@ export function render({ model, el }) {
       }
       
       const input = document.createElement('input');
-      input.className = 'widget-input';
+      input.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
       input.type = paramDef.type;
       input.value = params[paramDef.name] || paramDef.default;
       input.step = paramDef.step || '1';

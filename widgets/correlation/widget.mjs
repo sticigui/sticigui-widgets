@@ -17,21 +17,36 @@
 
 import { PRNG } from '../../src/sim/prng.mjs';
 import { mean, sampleSD, linearRegression } from '../../src/math/stats-math.mjs';
-import styles from './styles.css';
+import styles from '../../css/sticigui-tailwind.css';
 
 // Inject styles into document
-function injectStyles() {
-  if (!document.getElementById('correlation-styles')) {
+function injectStyles(el) {
+  if (!el.querySelector('.widget-styles')) {
     const styleEl = document.createElement('style');
-    styleEl.id = 'correlation-styles';
+    styleEl.className = 'widget-styles';
     styleEl.textContent = styles;
-    document.head.appendChild(styleEl);
+    el.appendChild(styleEl);
   }
 }
 
 // Helper to get CSS variable value
 function getCSSVar(name) {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const root = document.querySelector('.sg-widget-root') || document.documentElement;
+  const val = getComputedStyle(root).getPropertyValue(name).trim();
+  if (val) return val;
+  const fallbacks = {
+    '--widget-text-primary': '#000000',
+    '--widget-text-secondary': '#57534e',
+    '--widget-bg-primary': '#ffffff',
+    '--widget-bg-secondary': '#f5f5f4',
+    '--widget-border-light': '#d6d3d1',
+    '--widget-border-dark': '#44403c',
+    '--widget-accent': '#ea580c',
+    '--widget-primary': '#0ea5e9',
+    '--widget-primary-highlight': '#f97316',
+    '--widget-chart-line': '#dc2626'
+  };
+  return fallbacks[name] || '#000000';
 }
 
 /**
@@ -39,7 +54,7 @@ function getCSSVar(name) {
  */
 export function render({ model, el }) {
   // Inject CSS
-  injectStyles();
+  injectStyles(el);
 
   // Get model state
   let title = model.get('title');
@@ -58,28 +73,28 @@ export function render({ model, el }) {
   
   // Create container
   const container = document.createElement('div');
-  container.className = 'widget-container';
+  container.className = 'sg-font-sans sg-p-6 sg-max-w-[800px] sg-bg-white dark:sg-bg-stone-950 sg-rounded-xl sg-shadow-sm sg-border sg-border-slate-200 dark:sg-border-stone-800 sg-text-slate-900 dark:sg-text-stone-100 sg-widget-root sg-transition-colors';
   
   // Title (optional)
   if (title) {
     const titleEl = document.createElement('h3');
-    titleEl.className = 'widget-title';
+    titleEl.className = 'sg-m-0 sg-mb-6 sg-text-2xl sg-font-semibold sg-tracking-tight sg-text-slate-900 dark:sg-text-stone-100';
     titleEl.textContent = title;
     container.appendChild(titleEl);
   }
   
   // Controls row 1: r and n sliders
   const controls1 = document.createElement('div');
-  controls1.className = 'widget-controls';
+  controls1.className = 'sg-mb-4 sg-flex sg-flex-wrap sg-gap-4 sg-items-center';
   
   // r slider
   const rGroup = document.createElement('div');
-  rGroup.className = 'widget-input-group';
+  rGroup.className = 'sg-flex sg-items-center sg-gap-2.5';
   const rLabel = document.createElement('label');
-  rLabel.className = 'widget-label';
+  rLabel.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300';
   rLabel.textContent = 'r =';
   const rSlider = document.createElement('input');
-  rSlider.className = 'widget-input';
+  rSlider.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
   rSlider.type = 'range';
   rSlider.min = '-1';
   rSlider.max = '1';
@@ -89,7 +104,7 @@ export function render({ model, el }) {
   rSlider.setAttribute('data-testid', 'r-slider');
   rSlider.setAttribute('aria-label', 'Correlation coefficient');
   const rValue = document.createElement('span');
-  rValue.className = 'widget-label';
+  rValue.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300';
   rValue.textContent = r.toFixed(2);
   rValue.style.minWidth = '40px';
   rValue.setAttribute('data-testid', 'r-value');
@@ -100,12 +115,12 @@ export function render({ model, el }) {
   
   // n slider
   const nGroup = document.createElement('div');
-  nGroup.className = 'widget-input-group';
+  nGroup.className = 'sg-flex sg-items-center sg-gap-2.5';
   const nLabel = document.createElement('label');
-  nLabel.className = 'widget-label';
+  nLabel.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300';
   nLabel.textContent = 'n =';
   const nSlider = document.createElement('input');
-  nSlider.className = 'widget-input';
+  nSlider.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
   nSlider.type = 'range';
   nSlider.min = '10';
   nSlider.max = '200';
@@ -115,7 +130,7 @@ export function render({ model, el }) {
   nSlider.setAttribute('data-testid', 'n-slider');
   nSlider.setAttribute('aria-label', 'Sample size');
   const nValue = document.createElement('span');
-  nValue.className = 'widget-label';
+  nValue.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300';
   nValue.textContent = n;
   nValue.style.minWidth = '40px';
   nValue.setAttribute('data-testid', 'n-value');
@@ -128,11 +143,11 @@ export function render({ model, el }) {
   
   // Controls row 2: annotation toggles
   const controls2 = document.createElement('div');
-  controls2.className = 'widget-controls';
+  controls2.className = 'sg-mb-4 sg-flex sg-flex-wrap sg-gap-4 sg-items-center';
   
   // SD Lines checkbox
   const sdLinesGroup = document.createElement('div');
-  sdLinesGroup.className = 'widget-checkbox';
+  sdLinesGroup.className = 'sg-flex sg-items-center sg-gap-2';
   const sdLinesCheckbox = document.createElement('input');
   sdLinesCheckbox.type = 'checkbox';
   sdLinesCheckbox.checked = showSDLines;
@@ -147,7 +162,7 @@ export function render({ model, el }) {
   
   // SD Line checkbox
   const sdLineGroup = document.createElement('div');
-  sdLineGroup.className = 'widget-checkbox';
+  sdLineGroup.className = 'sg-flex sg-items-center sg-gap-2';
   const sdLineCheckbox = document.createElement('input');
   sdLineCheckbox.type = 'checkbox';
   sdLineCheckbox.checked = showSDLine;
@@ -162,7 +177,7 @@ export function render({ model, el }) {
   
   // Regression checkbox
   const regressionGroup = document.createElement('div');
-  regressionGroup.className = 'widget-checkbox';
+  regressionGroup.className = 'sg-flex sg-items-center sg-gap-2';
   const regressionCheckbox = document.createElement('input');
   regressionCheckbox.type = 'checkbox';
   regressionCheckbox.checked = showRegression;
@@ -177,7 +192,7 @@ export function render({ model, el }) {
   
   // Include added points checkbox
   const includeAddedGroup = document.createElement('div');
-  includeAddedGroup.className = 'widget-checkbox';
+  includeAddedGroup.className = 'sg-flex sg-items-center sg-gap-2';
   const includeAddedCheckbox = document.createElement('input');
   includeAddedCheckbox.type = 'checkbox';
   includeAddedCheckbox.checked = includeAddedPoints;
@@ -192,7 +207,7 @@ export function render({ model, el }) {
   
   // Clear added points button
   const clearButton = document.createElement('button');
-  clearButton.className = 'widget-button';
+  clearButton.className = 'sg-px-4 sg-py-2 sg-text-sm sg-font-medium sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-700 dark:sg-text-stone-200 sg-shadow-sm sg-cursor-pointer sg-transition-colors hover:sg-bg-slate-50 dark:hover:sg-bg-stone-800 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:ring-offset-2 dark:sg-focus:ring-offset-stone-950';
   clearButton.textContent = 'Clear Added Points';
   clearButton.setAttribute('data-testid', 'clear-added-button');
   clearButton.setAttribute('aria-label', 'Clear user-added points');
@@ -202,7 +217,7 @@ export function render({ model, el }) {
   
   // Stats display
   const stats = document.createElement('div');
-  stats.className = 'widget-summary';
+  stats.className = 'sg-bg-slate-50 dark:sg-bg-stone-800/50 sg-rounded-lg sg-border sg-border-slate-200 dark:sg-border-stone-700 sg-p-4 sg-mb-6';
   stats.setAttribute('data-testid', 'stats-display');
   container.appendChild(stats);
   

@@ -7,29 +7,31 @@
 
 import { fetchData } from '../../src/utils/fetchData.mjs';
 import { mean, sampleSD, normalPDF } from '../../src/math/stats-math.mjs';
-import styles from './styles.css';
+import { isDarkMode, onDarkModeChange } from '../../src/utils/dark-mode.mjs';
+import styles from '../../css/sticigui-tailwind.css';
 
-// Inject styles into document
-function injectStyles() {
-  if (!document.getElementById('hist-control-styles')) {
+// Inject styles into the widget container to ensure it penetrates any Shadow DOM
+function injectStyles(el) {
+  // Check if we already injected styles into this specific widget instance
+  if (!el.querySelector('.hist-control-styles')) {
     const styleEl = document.createElement('style');
-    styleEl.id = 'hist-control-styles';
+    styleEl.className = 'hist-control-styles';
     styleEl.textContent = styles;
-    document.head.appendChild(styleEl);
+    el.appendChild(styleEl);
   }
 }
 
 // Helper to get CSS variable value
-function getCSSVar(name) {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+function getCSSVar(name, el = document.documentElement) {
+  return getComputedStyle(el).getPropertyValue(name).trim();
 }
 
 /**
  * Main render function
  */
 export async function render({ model, el }) {
-  // Inject CSS
-  injectStyles();
+  // Inject CSS directly into the widget element to bypass MyST's potential Shadow DOM isolation
+  injectStyles(el);
 
   // Get model state
   let title = model.get('title');
@@ -67,30 +69,45 @@ export async function render({ model, el }) {
   
   // Container setup
   const container = document.createElement('div');
-  container.className = 'widget-container';
+  container.className = 'sg-font-sans sg-p-6 sg-max-w-[800px] sg-bg-white dark:sg-bg-stone-950 sg-rounded-xl sg-shadow-sm sg-border sg-border-slate-200 dark:sg-border-stone-800 sg-text-slate-900 dark:sg-text-stone-100 sg-widget-root sg-transition-colors';
   
   // Title (optional)
   if (title) {
     const titleEl = document.createElement('h3');
-    titleEl.className = 'widget-title';
+    titleEl.className = 'sg-m-0 sg-mb-6 sg-text-2xl sg-font-semibold sg-tracking-tight sg-text-slate-900 dark:sg-text-stone-100';
     titleEl.textContent = title;
     container.appendChild(titleEl);
   }
   
+  // Setup dark mode sync
+  const updateDarkMode = () => {
+    if (isDarkMode(container)) {
+      container.classList.add('dark');
+    } else {
+      container.classList.remove('dark');
+    }
+  };
+  const cleanupDarkMode = onDarkModeChange(() => {
+    updateDarkMode();
+    renderChart();
+  });
+  // Initial sync
+  setTimeout(updateDarkMode, 0);
+  
   // Controls row 1: Dataset and variable selectors
   const controls1 = document.createElement('div');
-  controls1.className = 'widget-controls';
+  controls1.className = 'sg-mb-4 sg-flex sg-flex-wrap sg-gap-4 sg-items-center';
   
   // Dataset selector (only show if multiple datasets)
   let datasetSelect;
   if (datasetNames.length > 1) {
     const datasetGroup = document.createElement('div');
-    datasetGroup.className = 'widget-input-group';
+    datasetGroup.className = 'sg-flex sg-items-center sg-gap-2.5';
     const datasetLabel = document.createElement('label');
-    datasetLabel.className = 'widget-label';
+    datasetLabel.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300';
     datasetLabel.textContent = 'Dataset:';
     datasetSelect = document.createElement('select');
-    datasetSelect.className = 'widget-select';
+    datasetSelect.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
     datasetSelect.setAttribute('data-testid', 'dataset-select');
     datasetNames.forEach(ds => {
       const option = document.createElement('option');
@@ -106,12 +123,12 @@ export async function render({ model, el }) {
   
   // Variable selector
   const varGroup = document.createElement('div');
-  varGroup.className = 'widget-input-group';
+  varGroup.className = 'sg-flex sg-items-center sg-gap-2.5';
   const varLabel = document.createElement('label');
-  varLabel.className = 'widget-label';
+  varLabel.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300';
   varLabel.textContent = 'Variable:';
   const varSelect = document.createElement('select');
-  varSelect.className = 'widget-select';
+  varSelect.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
   varSelect.setAttribute('data-testid', 'variable-select');
   varGroup.appendChild(varLabel);
   varGroup.appendChild(varSelect);
@@ -119,12 +136,12 @@ export async function render({ model, el }) {
   
   // Bins input
   const binsGroup = document.createElement('div');
-  binsGroup.className = 'widget-input-group';
+  binsGroup.className = 'sg-flex sg-items-center sg-gap-2.5';
   const binsLabel = document.createElement('label');
-  binsLabel.className = 'widget-label';
+  binsLabel.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300';
   binsLabel.textContent = 'Bins:';
   const binsInput = document.createElement('input');
-  binsInput.className = 'widget-input';
+  binsInput.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
   binsInput.type = 'number';
   binsInput.min = '5';
   binsInput.max = '100';
@@ -137,13 +154,13 @@ export async function render({ model, el }) {
   
   // Lo input
   const loGroup = document.createElement('div');
-  loGroup.className = 'widget-input-group';
+  loGroup.className = 'sg-flex sg-items-center sg-gap-2.5';
   controls1.appendChild(loGroup);
   const loLabel = document.createElement('label');
-  loLabel.className = 'widget-label';
+  loLabel.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300';
   loLabel.textContent = 'Area from:';
   const loInput = document.createElement('input');
-  loInput.className = 'widget-input';
+  loInput.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
   loInput.type = 'number';
   if (lo !== null) loInput.value = lo;
   loInput.setAttribute('aria-label', 'Area from');
@@ -152,13 +169,13 @@ export async function render({ model, el }) {
 
   // Hi input
   const hiGroup = document.createElement('div');
-  hiGroup.className = 'widget-input-group';
+  hiGroup.className = 'sg-flex sg-items-center sg-gap-2.5';
   controls1.appendChild(hiGroup);
   const hiLabel = document.createElement('label');
-  hiLabel.className = 'widget-label';
+  hiLabel.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300';
   hiLabel.textContent = 'Area to:';
   const hiInput = document.createElement('input');
-  hiInput.className = 'widget-input';
+  hiInput.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
   hiInput.type = 'number';
   if (hi !== null) hiInput.value = hi;
   hiInput.setAttribute('aria-label', 'Area to');
@@ -167,13 +184,13 @@ export async function render({ model, el }) {
 
   // List Data button
   const listDataBtn = document.createElement('button');
-  listDataBtn.className = 'widget-button widget-button-secondary';
+  listDataBtn.className = 'sg-px-4 sg-py-2 sg-text-sm sg-font-medium sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-700 dark:sg-text-stone-200 sg-shadow-sm sg-cursor-pointer sg-transition-colors hover:sg-bg-slate-50 dark:hover:sg-bg-stone-800 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:ring-offset-2 dark:sg-focus:ring-offset-stone-950';
   listDataBtn.textContent = 'List Data';
   controls1.appendChild(listDataBtn);
 
   // Univariate Stats button
   const statsBtn = document.createElement('button');
-  statsBtn.className = 'widget-button widget-button-secondary';
+  statsBtn.className = 'sg-px-4 sg-py-2 sg-text-sm sg-font-medium sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-700 dark:sg-text-stone-200 sg-shadow-sm sg-cursor-pointer sg-transition-colors hover:sg-bg-slate-50 dark:hover:sg-bg-stone-800 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:ring-offset-2 dark:sg-focus:ring-offset-stone-950';
   statsBtn.textContent = 'Univariate Stats';
   controls1.appendChild(statsBtn);
 
@@ -181,12 +198,13 @@ export async function render({ model, el }) {
   
   // Controls row 2: Show/hide toggles and normal curve
   const controls2 = document.createElement('div');
-  controls2.className = 'widget-controls';
+  controls2.className = 'sg-mb-4 sg-flex sg-flex-wrap sg-gap-4 sg-items-center';
   
   // Helper to create checkbox
   function createCheckbox(id, label, checked, testId) {
     const checkbox = document.createElement('input');
     checkbox.type = 'checkbox';
+    checkbox.className = 'sg-w-4 sg-h-4 sg-accent-blue-600 sg-cursor-pointer sg-rounded sg-border-slate-300 dark:sg-border-stone-600';
     checkbox.checked = checked;
     checkbox.id = id;
     checkbox.setAttribute('data-testid', testId);
@@ -194,7 +212,7 @@ export async function render({ model, el }) {
     labelEl.htmlFor = id;
     labelEl.textContent = label;
     const group = document.createElement('div');
-    group.className = 'widget-checkbox';
+    group.className = 'sg-flex sg-items-center sg-gap-2.5';
     group.appendChild(checkbox);
     group.appendChild(labelEl);
     return { group, checkbox };
@@ -213,7 +231,7 @@ export async function render({ model, el }) {
   
   // Clear restrictions button
   const clearButton = document.createElement('button');
-  clearButton.className = 'widget-button';
+  clearButton.className = 'sg-px-4 sg-py-2 sg-text-sm sg-font-medium sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-700 dark:sg-text-stone-200 sg-shadow-sm sg-cursor-pointer sg-transition-colors hover:sg-bg-slate-50 dark:hover:sg-bg-stone-800 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:ring-offset-2 dark:sg-focus:ring-offset-stone-950';
   clearButton.textContent = 'Clear Restrictions';
   clearButton.setAttribute('data-testid', 'clear-restrictions-button');
   controls2.appendChild(clearButton);
@@ -223,14 +241,14 @@ export async function render({ model, el }) {
   // Restrictions container
   const restrictionsContainer = document.createElement('div');
   restrictionsContainer.style.marginBottom = '1rem';
-  restrictionsContainer.style.padding = '0.5rem';
-  restrictionsContainer.style.border = '1px solid var(--widget-border-light)';
-  restrictionsContainer.style.borderRadius = '4px';
-  restrictionsContainer.style.background = 'var(--widget-bg-secondary)';
+  // removed inline padding
+  // removed inline border
+  // removed inline border radius
+  restrictionsContainer.className = 'sg-bg-slate-50 dark:sg-bg-stone-800/50 sg-rounded-lg sg-border sg-border-slate-200 dark:sg-border-stone-700 sg-p-4 sg-mb-6';
   restrictionsContainer.setAttribute('data-testid', 'restrictions-container');
   
   const restrictionsTitle = document.createElement('div');
-  restrictionsTitle.className = 'widget-label';
+  restrictionsTitle.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300';
   restrictionsTitle.style.fontWeight = 'bold';
   restrictionsTitle.style.marginBottom = '0.5rem';
   restrictionsTitle.textContent = 'Restrictions:';
@@ -242,7 +260,7 @@ export async function render({ model, el }) {
   
   // Add restriction button
   const addRestrictionButton = document.createElement('button');
-  addRestrictionButton.className = 'widget-button';
+  addRestrictionButton.className = 'sg-px-4 sg-py-2 sg-text-sm sg-font-medium sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-700 dark:sg-text-stone-200 sg-shadow-sm sg-cursor-pointer sg-transition-colors hover:sg-bg-slate-50 dark:hover:sg-bg-stone-800 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:ring-offset-2 dark:sg-focus:ring-offset-stone-950';
   addRestrictionButton.textContent = '+ Add Restriction';
   addRestrictionButton.style.marginTop = '0.5rem';
   addRestrictionButton.setAttribute('data-testid', 'add-restriction-button');
@@ -252,20 +270,20 @@ export async function render({ model, el }) {
   
   // Stats display
   const stats = document.createElement('div');
-  stats.className = 'widget-summary';
+  stats.className = 'sg-mb-4 sg-text-sm sg-text-slate-900 dark:sg-text-stone-200';
   stats.setAttribute('data-testid', 'stats-display');
   container.appendChild(stats);
 
   // Proportion display
   const propDisplay = document.createElement('div');
-  propDisplay.className = 'widget-summary';
+  propDisplay.className = 'sg-mb-4 sg-text-sm sg-text-slate-900 dark:sg-text-stone-200';
   propDisplay.setAttribute('data-testid', 'prop-display');
   container.appendChild(propDisplay);
 
   
   // Chart container
   const chartContainer = document.createElement('div');
-  chartContainer.className = 'widget-chart-container';
+  chartContainer.className = 'sg-w-full sg-h-[400px]';
   chartContainer.setAttribute('data-testid', 'chart-container');
   container.appendChild(chartContainer);
   
@@ -280,23 +298,26 @@ export async function render({ model, el }) {
   function showDataModal() {
     if (!data || data.length === 0) return;
 
+    const wrapper = document.createElement('div');
+    wrapper.className = 'sg-widget-root';
+
     const overlay = document.createElement('div');
-    overlay.className = 'widget-modal-overlay';
+    overlay.className = 'sg-fixed sg-inset-0 sg-bg-black/50 sg-flex sg-justify-center sg-items-center sg-z-[9999]';
     
     const modalContent = document.createElement('div');
-    modalContent.className = 'widget-modal-content';
+    modalContent.className = 'sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-200 sg-border sg-border-slate-200 dark:sg-border-stone-700 sg-rounded-xl sg-p-6 sg-w-[90%] sg-max-w-4xl sg-max-h-[85vh] sg-overflow-y-auto sg-shadow-2xl sg-relative';
 
     const header = document.createElement('div');
-    header.className = 'widget-modal-header';
+    header.className = 'sg-flex sg-justify-between sg-items-center sg-mb-4 sg-border-b sg-border-stone-300 dark:sg-border-stone-600 sg-pb-2';
     
     const title = document.createElement('h3');
-    title.className = 'widget-modal-title';
+    title.className = 'sg-m-0 sg-text-xl';
     title.textContent = `Data: ${currentDataset}`;
     
     const closeBtn = document.createElement('button');
-    closeBtn.className = 'widget-modal-close';
+    closeBtn.className = 'sg-bg-transparent sg-border-none sg-text-2xl sg-leading-none sg-cursor-pointer sg-text-stone-500 hover:sg-text-slate-900 dark:hover:sg-text-stone-200';
     closeBtn.innerHTML = '&times;';
-    closeBtn.onclick = () => document.body.removeChild(overlay);
+    closeBtn.onclick = () => el.removeChild(wrapper);
     
     header.appendChild(title);
     header.appendChild(closeBtn);
@@ -306,7 +327,7 @@ export async function render({ model, el }) {
     tableContainer.style.overflowX = 'auto';
 
     const table = document.createElement('table');
-    table.className = 'widget-table';
+    table.className = 'sg-w-full sg-text-sm sg-text-left sg-border-collapse';
     
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
@@ -339,11 +360,12 @@ export async function render({ model, el }) {
     
     overlay.onclick = (e) => {
       if (e.target === overlay) {
-        document.body.removeChild(overlay);
+        el.removeChild(wrapper);
       }
     };
 
-    document.body.appendChild(overlay);
+    wrapper.appendChild(overlay);
+    el.appendChild(wrapper);
   }
 
   // Calculate percentile
@@ -365,23 +387,26 @@ export async function render({ model, el }) {
   function showStatsModal() {
     if (!data || data.length === 0) return;
 
+    const wrapper = document.createElement('div');
+    wrapper.className = 'sg-widget-root';
+
     const overlay = document.createElement('div');
-    overlay.className = 'widget-modal-overlay';
+    overlay.className = 'sg-fixed sg-inset-0 sg-bg-black/50 sg-flex sg-justify-center sg-items-center sg-z-[9999]';
     
     const modalContent = document.createElement('div');
-    modalContent.className = 'widget-modal-content';
+    modalContent.className = 'sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-200 sg-border sg-border-slate-200 dark:sg-border-stone-700 sg-rounded-xl sg-p-6 sg-w-[90%] sg-max-w-4xl sg-max-h-[85vh] sg-overflow-y-auto sg-shadow-2xl sg-relative';
 
     const header = document.createElement('div');
-    header.className = 'widget-modal-header';
+    header.className = 'sg-flex sg-justify-between sg-items-center sg-mb-4 sg-border-b sg-border-stone-300 dark:sg-border-stone-600 sg-pb-2';
     
     const title = document.createElement('h3');
-    title.className = 'widget-modal-title';
+    title.className = 'sg-m-0 sg-text-xl';
     title.textContent = `Univariate Statistics: ${currentDataset}`;
     
     const closeBtn = document.createElement('button');
-    closeBtn.className = 'widget-modal-close';
+    closeBtn.className = 'sg-bg-transparent sg-border-none sg-text-2xl sg-leading-none sg-cursor-pointer sg-text-stone-500 hover:sg-text-slate-900 dark:hover:sg-text-stone-200';
     closeBtn.innerHTML = '&times;';
-    closeBtn.onclick = () => document.body.removeChild(overlay);
+    closeBtn.onclick = () => el.removeChild(wrapper);
     
     header.appendChild(title);
     header.appendChild(closeBtn);
@@ -391,7 +416,7 @@ export async function render({ model, el }) {
     tableContainer.style.overflowX = 'auto';
 
     const table = document.createElement('table');
-    table.className = 'widget-table';
+    table.className = 'sg-w-full sg-text-sm sg-text-left sg-border-collapse';
     
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
@@ -448,11 +473,12 @@ export async function render({ model, el }) {
     
     overlay.onclick = (e) => {
       if (e.target === overlay) {
-        document.body.removeChild(overlay);
+        el.removeChild(wrapper);
       }
     };
 
-    document.body.appendChild(overlay);
+    wrapper.appendChild(overlay);
+    el.appendChild(wrapper);
   }
 
   /**
@@ -680,11 +706,11 @@ export async function render({ model, el }) {
     const chartGroup = document.createElementNS('http://www.w3.org/2000/svg', 'g');
     
     // Get CSS vars for colors
-    const primaryColor = getCSSVar('--widget-primary');
-    const borderColor = getCSSVar('--widget-border-dark');
-    const accentColor = getCSSVar('--widget-accent');
-    const chartLineColor = getCSSVar('--widget-chart-line');
-    const textColor = getCSSVar('--widget-text-primary');
+    const primaryColor = getCSSVar('--widget-primary', container) || '#0ea5e9';
+    const borderColor = getCSSVar('--widget-border-dark', container) || '#44403c';
+    const accentColor = getCSSVar('--widget-accent', container) || '#ea580c';
+    const chartLineColor = getCSSVar('--widget-chart-line', container) || '#dc2626';
+    const textColor = getCSSVar('--widget-text-primary', container) || '#000000';
     
     // Draw full histogram
     if (showFull) {
@@ -821,13 +847,13 @@ export async function render({ model, el }) {
     
     restrictions.forEach((r, index) => {
       const row = document.createElement('div');
-      row.className = 'widget-controls';
+      row.className = 'sg-mb-4 sg-flex sg-flex-wrap sg-gap-4 sg-items-center';
       row.style.marginBottom = '0.5rem';
       row.setAttribute('data-testid', `restriction-row-${index}`);
       
       // Variable selector
       const varSelect = document.createElement('select');
-      varSelect.className = 'widget-select';
+      varSelect.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
       varSelect.style.fontSize = '12px';
       varSelect.setAttribute('data-testid', `restriction-var-${index}`);
       variables.forEach(v => {
@@ -847,9 +873,10 @@ export async function render({ model, el }) {
       
       // Min checkbox
       const minGroup = document.createElement('div');
-      minGroup.className = 'widget-checkbox';
+      minGroup.className = 'sg-flex sg-items-center sg-gap-2.5';
       const minCheckbox = document.createElement('input');
       minCheckbox.type = 'checkbox';
+      minCheckbox.className = 'sg-w-4 sg-h-4 sg-accent-blue-600 sg-cursor-pointer sg-rounded sg-border-slate-300 dark:sg-border-stone-600';
       minCheckbox.checked = r.use_min;
       minCheckbox.setAttribute('data-testid', `restriction-use-min-${index}`);
       minCheckbox.addEventListener('change', () => {
@@ -867,7 +894,7 @@ export async function render({ model, el }) {
       row.appendChild(minGroup);
       
       const minInput = document.createElement('input');
-      minInput.className = 'widget-input';
+      minInput.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
       minInput.type = 'number';
       minInput.value = r.min;
       minInput.style.width = '80px';
@@ -883,9 +910,10 @@ export async function render({ model, el }) {
       
       // Max checkbox
       const maxGroup = document.createElement('div');
-      maxGroup.className = 'widget-checkbox';
+      maxGroup.className = 'sg-flex sg-items-center sg-gap-2.5';
       const maxCheckbox = document.createElement('input');
       maxCheckbox.type = 'checkbox';
+      maxCheckbox.className = 'sg-w-4 sg-h-4 sg-accent-blue-600 sg-cursor-pointer sg-rounded sg-border-slate-300 dark:sg-border-stone-600';
       maxCheckbox.checked = r.use_max;
       maxCheckbox.setAttribute('data-testid', `restriction-use-max-${index}`);
       maxCheckbox.addEventListener('change', () => {
@@ -903,7 +931,7 @@ export async function render({ model, el }) {
       row.appendChild(maxGroup);
       
       const maxInput = document.createElement('input');
-      maxInput.className = 'widget-input';
+      maxInput.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
       maxInput.type = 'number';
       maxInput.value = r.max;
       maxInput.style.width = '80px';
@@ -919,7 +947,7 @@ export async function render({ model, el }) {
       
       // Remove button
       const removeButton = document.createElement('button');
-      removeButton.className = 'widget-button';
+      removeButton.className = 'sg-px-4 sg-py-2 sg-text-sm sg-font-medium sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-700 dark:sg-text-stone-200 sg-shadow-sm sg-cursor-pointer sg-transition-colors hover:sg-bg-slate-50 dark:hover:sg-bg-stone-800 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:ring-offset-2 dark:sg-focus:ring-offset-stone-950';
       removeButton.textContent = '×';
       removeButton.style.padding = '2px 8px';
       removeButton.style.fontWeight = 'bold';
@@ -1081,6 +1109,7 @@ export async function render({ model, el }) {
   // Cleanup
   return () => {
     resizeObserver.disconnect();
+    cleanupDarkMode();
   };
 }
 

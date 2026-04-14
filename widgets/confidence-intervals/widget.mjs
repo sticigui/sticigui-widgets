@@ -14,21 +14,36 @@
 
 import { PRNG } from '../../src/sim/prng.mjs';
 import { tQuantile } from '../../src/math/stats-math.mjs';
-import styles from './styles.css';
+import styles from '../../css/sticigui-tailwind.css';
 
 // Inject styles into document
-function injectStyles() {
-  if (!document.getElementById('confidence-intervals-styles')) {
+function injectStyles(el) {
+  if (!el.querySelector('.widget-styles')) {
     const styleEl = document.createElement('style');
-    styleEl.id = 'confidence-intervals-styles';
+    styleEl.className = 'widget-styles';
     styleEl.textContent = styles;
-    document.head.appendChild(styleEl);
+    el.appendChild(styleEl);
   }
 }
 
 // Helper to get CSS variable value
 function getCSSVar(name) {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const root = document.querySelector('.sg-widget-root') || document.documentElement;
+  const val = getComputedStyle(root).getPropertyValue(name).trim();
+  if (val) return val;
+  const fallbacks = {
+    '--widget-text-primary': '#000000',
+    '--widget-text-secondary': '#57534e',
+    '--widget-bg-primary': '#ffffff',
+    '--widget-bg-secondary': '#f5f5f4',
+    '--widget-border-light': '#d6d3d1',
+    '--widget-border-dark': '#44403c',
+    '--widget-accent': '#ea580c',
+    '--widget-primary': '#0ea5e9',
+    '--widget-primary-highlight': '#f97316',
+    '--widget-chart-line': '#dc2626'
+  };
+  return fallbacks[name] || '#000000';
 }
 
 /**
@@ -36,7 +51,7 @@ function getCSSVar(name) {
  */
 export function render({ model, el }) {
   // Inject CSS
-  injectStyles();
+  injectStyles(el);
   
   // Get model state
   let title = model.get('title');
@@ -55,39 +70,36 @@ export function render({ model, el }) {
   
   // Create container
   const container = document.createElement('div');
-  container.className = 'widget-container';
+  container.className = 'sg-font-sans sg-p-6 sg-max-w-[800px] sg-bg-white dark:sg-bg-stone-950 sg-rounded-xl sg-shadow-sm sg-border sg-border-slate-200 dark:sg-border-stone-800 sg-text-slate-900 dark:sg-text-stone-100 sg-widget-root sg-transition-colors';
   
   // Create title if specified
   if (title) {
     const titleEl = document.createElement('h3');
-    titleEl.className = 'widget-title';
+    titleEl.className = 'sg-m-0 sg-mb-6 sg-text-2xl sg-font-semibold sg-tracking-tight sg-text-slate-900 dark:sg-text-stone-100';
     titleEl.textContent = title;
     container.appendChild(titleEl);
   }
   
   // Create controls container
   const controls = document.createElement('div');
-  controls.className = 'widget-controls';
+  controls.className = 'sg-mb-4 sg-flex sg-flex-wrap sg-gap-4 sg-items-center';
   controls.style.alignItems = 'flex-end';
   
   // Helper to create labeled input
   function createInput(labelText, type, value, min, max, step, testId) {
     const wrapper = document.createElement('div');
-    wrapper.style.display = 'flex';
-    wrapper.style.flexDirection = 'column';
+    wrapper.className = 'sg-flex sg-flex-col sg-gap-1';
 
     const label = document.createElement('label');
-    label.className = 'widget-label';
-    label.style.marginBottom = '0.25rem';
+    label.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300';
     label.textContent = labelText;
     wrapper.appendChild(label);
 
     const input = document.createElement('input');
-    input.className = 'widget-input';
+    input.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
     input.type = type;
     input.value = value;
     input.style.width = '100px';
-    input.style.padding = '0.5rem';
     if (min !== undefined) input.min = min;
     if (max !== undefined) input.max = max;
     if (step !== undefined) input.step = step;
@@ -111,18 +123,16 @@ export function render({ model, el }) {
   
   // Take sample button
   const sampleButton = document.createElement('button');
-  sampleButton.className = 'widget-button-primary';
+  sampleButton.className = 'sg-px-4 sg-py-2 sg-text-sm sg-font-medium sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-700 dark:sg-text-stone-200 sg-shadow-sm sg-cursor-pointer sg-transition-colors hover:sg-bg-slate-50 dark:hover:sg-bg-stone-800 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:ring-offset-2 dark:sg-focus:ring-offset-stone-950';
   sampleButton.textContent = 'Take Sample';
-  sampleButton.style.padding = '0.5rem 1.5rem';
   sampleButton.setAttribute('data-testid', 'sample-button');
   sampleButton.setAttribute('aria-label', 'Take sample and compute confidence intervals');
   controls.appendChild(sampleButton);
   
   // Clear button
   const clearButton = document.createElement('button');
-  clearButton.className = 'widget-button-secondary';
+  clearButton.className = 'sg-px-4 sg-py-2 sg-text-sm sg-font-medium sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-700 dark:sg-text-stone-200 sg-shadow-sm sg-cursor-pointer sg-transition-colors hover:sg-bg-slate-50 dark:hover:sg-bg-stone-800 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:ring-offset-2 dark:sg-focus:ring-offset-stone-950';
   clearButton.textContent = 'Clear';
-  clearButton.style.padding = '0.5rem 1rem';
   clearButton.setAttribute('data-testid', 'clear-button');
   clearButton.setAttribute('aria-label', 'Clear all confidence intervals');
   controls.appendChild(clearButton);
@@ -131,7 +141,7 @@ export function render({ model, el }) {
   
   // Coverage summary
   const summary = document.createElement('div');
-  summary.className = 'widget-summary';
+  summary.className = 'sg-mb-4 sg-text-sm sg-text-slate-900 dark:sg-text-stone-200';
   summary.setAttribute('data-testid', 'coverage-summary');
   container.appendChild(summary);
   

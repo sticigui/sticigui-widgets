@@ -5,22 +5,18 @@
  * Operations: +, -, ×, ÷, =, nCk, nPk, x², √x, 1/x, log, ln, e^x, sin, cos, tan, π, U[0,1]
  */
 
-import styles from './styles.css';
+import styles from '../../css/sticigui-tailwind.css';
 
 // Inject styles into document
-function injectStyles() {
-  if (!document.getElementById('stats-calc-styles')) {
+function injectStyles(el) {
+  if (!el.querySelector('.widget-styles')) {
     const styleEl = document.createElement('style');
-    styleEl.id = 'stats-calc-styles';
+    styleEl.className = 'widget-styles';
     styleEl.textContent = styles;
-    document.head.appendChild(styleEl);
+    el.appendChild(styleEl);
   }
 }
 
-// Helper to get CSS variable value
-function getCSSVar(name) {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
-}
 
 /**
  * Calculate nCk (combinations)
@@ -58,7 +54,7 @@ function permutations(n, k) {
  */
 export function render({ model, el }) {
   // Inject CSS
-  injectStyles();
+  injectStyles(el);
 
   // Calculator state
   let title = model.get('title');
@@ -70,23 +66,23 @@ export function render({ model, el }) {
 
   // Create container
   const container = document.createElement('div');
-  container.className = 'widget-container';
+  container.className = 'sg-font-sans sg-p-6 sg-max-w-[800px] sg-bg-white dark:sg-bg-stone-950 sg-rounded-xl sg-shadow-sm sg-border sg-border-slate-200 dark:sg-border-stone-800 sg-text-slate-900 dark:sg-text-stone-100 sg-widget-root sg-transition-colors';
   container.style.maxWidth = '400px';
 
   // Title (optional)
   if (title) {
     const titleEl = document.createElement('h3');
-    titleEl.className = 'widget-title';
+    titleEl.className = 'sg-m-0 sg-mb-6 sg-text-2xl sg-font-semibold sg-tracking-tight sg-text-slate-900 dark:sg-text-stone-100';
     titleEl.textContent = title;
     container.appendChild(titleEl);
   }
 
   // Display
   const displayEl = document.createElement('div');
-  displayEl.className = 'widget-display';
+  displayEl.className = 'sg-mb-4 sg-text-sm sg-text-slate-900 dark:sg-text-stone-200';
   displayEl.style.padding = '1rem';
-  displayEl.style.background = getCSSVar('--widget-bg-secondary');
-  displayEl.style.border = `1px solid ${getCSSVar('--widget-border-light')}`;
+  displayEl.className += ' sg-bg-slate-50 dark:sg-bg-stone-900';
+  displayEl.className += ' sg-border sg-border-slate-200 dark:sg-border-stone-700';
   displayEl.style.borderRadius = '4px';
   displayEl.style.fontSize = '2rem';
   displayEl.style.textAlign = 'right';
@@ -284,17 +280,17 @@ export function render({ model, el }) {
     button.textContent = btn.label;
     button.style.padding = '1rem';
     button.style.fontSize = '1.25rem';
-    button.style.border = `1px solid ${getCSSVar('--widget-border-light')}`;
+    button.className += ' sg-border sg-border-slate-200 dark:sg-border-stone-700 sg-transition-colors sg-shadow-sm hover:sg-bg-slate-100 dark:hover:sg-bg-stone-800';
     button.style.borderRadius = '4px';
     button.style.cursor = 'pointer';
-    button.style.background = getCSSVar('--widget-bg-primary');
-    button.style.color = getCSSVar('--widget-text-primary');
+    button.className += ' sg-bg-white dark:sg-bg-stone-950';
+    button.className += ' sg-text-slate-900 dark:sg-text-stone-100';
     
     if (btn.class === 'operator') {
-      button.style.background = getCSSVar('--widget-primary');
+      button.className += ' !sg-bg-blue-600 dark:!sg-bg-blue-700 hover:!sg-bg-blue-700 dark:hover:!sg-bg-blue-600 !sg-border-transparent';
       button.style.color = 'white';
     } else if (btn.class === 'equals') {
-      button.style.background = getCSSVar('--widget-accent');
+      button.className += ' !sg-bg-rose-500 dark:!sg-bg-rose-600 hover:!sg-bg-rose-600 dark:hover:!sg-bg-rose-500 !sg-border-transparent';
       button.style.color = 'white';
     }
     
@@ -324,14 +320,14 @@ export function render({ model, el }) {
     button.textContent = btn.label;
     button.style.padding = '0.75rem';
     button.style.fontSize = '1rem';
-    button.style.border = `1px solid ${getCSSVar('--widget-border-light')}`;
+    button.className += ' sg-border sg-border-slate-200 dark:sg-border-stone-700 sg-transition-colors sg-shadow-sm hover:sg-bg-slate-100 dark:hover:sg-bg-stone-800';
     button.style.borderRadius = '4px';
     button.style.cursor = 'pointer';
-    button.style.background = getCSSVar('--widget-bg-secondary');
-    button.style.color = getCSSVar('--widget-text-primary');
+    button.className += ' sg-bg-slate-50 dark:sg-bg-stone-900';
+    button.className += ' sg-text-slate-900 dark:sg-text-stone-100';
     
     if (btn.class === 'clear') {
-      button.style.background = getCSSVar('--widget-chart-line');
+      button.className += ' !sg-bg-amber-500 dark:!sg-bg-amber-600 hover:!sg-bg-amber-600 dark:hover:!sg-bg-amber-500 !sg-border-transparent';
       button.style.color = 'white';
     }
     
@@ -361,11 +357,11 @@ export function render({ model, el }) {
     button.textContent = btn.label;
     button.style.padding = '0.75rem';
     button.style.fontSize = '1rem';
-    button.style.border = `1px solid ${getCSSVar('--widget-border-light')}`;
+    button.className += ' sg-border sg-border-slate-200 dark:sg-border-stone-700 sg-transition-colors sg-shadow-sm hover:sg-bg-slate-100 dark:hover:sg-bg-stone-800';
     button.style.borderRadius = '4px';
     button.style.cursor = 'pointer';
-    button.style.background = getCSSVar('--widget-bg-secondary');
-    button.style.color = getCSSVar('--widget-text-primary');
+    button.className += ' sg-bg-slate-50 dark:sg-bg-stone-900';
+    button.className += ' sg-text-slate-900 dark:sg-text-stone-100';
     
     button.addEventListener('click', btn.action);
     button.setAttribute('aria-label', btn.label);
@@ -393,11 +389,11 @@ export function render({ model, el }) {
     button.textContent = btn.label;
     button.style.padding = '0.75rem';
     button.style.fontSize = '1rem';
-    button.style.border = `1px solid ${getCSSVar('--widget-border-light')}`;
+    button.className += ' sg-border sg-border-slate-200 dark:sg-border-stone-700 sg-transition-colors sg-shadow-sm hover:sg-bg-slate-100 dark:hover:sg-bg-stone-800';
     button.style.borderRadius = '4px';
     button.style.cursor = 'pointer';
-    button.style.background = getCSSVar('--widget-bg-secondary');
-    button.style.color = getCSSVar('--widget-text-primary');
+    button.className += ' sg-bg-slate-50 dark:sg-bg-stone-900';
+    button.className += ' sg-text-slate-900 dark:sg-text-stone-100';
     
     button.addEventListener('click', btn.action);
     button.setAttribute('aria-label', btn.label);
@@ -424,11 +420,11 @@ export function render({ model, el }) {
     button.textContent = btn.label;
     button.style.padding = '0.75rem';
     button.style.fontSize = '1rem';
-    button.style.border = `1px solid ${getCSSVar('--widget-border-light')}`;
+    button.className += ' sg-border sg-border-slate-200 dark:sg-border-stone-700 sg-transition-colors sg-shadow-sm hover:sg-bg-slate-100 dark:hover:sg-bg-stone-800';
     button.style.borderRadius = '4px';
     button.style.cursor = 'pointer';
-    button.style.background = getCSSVar('--widget-bg-secondary');
-    button.style.color = getCSSVar('--widget-text-primary');
+    button.className += ' sg-bg-slate-50 dark:sg-bg-stone-900';
+    button.className += ' sg-text-slate-900 dark:sg-text-stone-100';
     
     button.addEventListener('click', btn.action);
     button.setAttribute('aria-label', btn.label);

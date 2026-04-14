@@ -19,21 +19,36 @@ import {
   tPDF,
   tCDF
 } from '../../src/math/stats-math.mjs';
-import styles from './styles.css';
+import styles from '../../css/sticigui-tailwind.css';
 
 // Inject styles into document
-function injectStyles() {
-  if (!document.getElementById('distribution-viewer-styles')) {
+function injectStyles(el) {
+  if (!el.querySelector('.widget-styles')) {
     const styleEl = document.createElement('style');
-    styleEl.id = 'distribution-viewer-styles';
+    styleEl.className = 'widget-styles';
     styleEl.textContent = styles;
-    document.head.appendChild(styleEl);
+    el.appendChild(styleEl);
   }
 }
 
 // Helper to get CSS variable value
 function getCSSVar(name) {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const root = document.querySelector('.sg-widget-root') || document.documentElement;
+  const val = getComputedStyle(root).getPropertyValue(name).trim();
+  if (val) return val;
+  const fallbacks = {
+    '--widget-text-primary': '#000000',
+    '--widget-text-secondary': '#57534e',
+    '--widget-bg-primary': '#ffffff',
+    '--widget-bg-secondary': '#f5f5f4',
+    '--widget-border-light': '#d6d3d1',
+    '--widget-border-dark': '#44403c',
+    '--widget-accent': '#ea580c',
+    '--widget-primary': '#0ea5e9',
+    '--widget-primary-highlight': '#f97316',
+    '--widget-chart-line': '#dc2626'
+  };
+  return fallbacks[name] || '#000000';
 }
 
 /**
@@ -176,7 +191,7 @@ function calculateProbability(distribution, params, lo, hi) {
  */
 function render({ model, el }) {
   // Inject CSS
-  injectStyles();
+  injectStyles(el);
 
   // Get initial state
   let title = model.get('title');
@@ -190,31 +205,31 @@ function render({ model, el }) {
 
   // Create container
   const container = document.createElement('div');
-  container.className = 'widget-container';
+  container.className = 'sg-font-sans sg-p-6 sg-max-w-[800px] sg-bg-white dark:sg-bg-stone-950 sg-rounded-xl sg-shadow-sm sg-border sg-border-slate-200 dark:sg-border-stone-800 sg-text-slate-900 dark:sg-text-stone-100 sg-widget-root sg-transition-colors';
 
   // Title (optional)
   if (title) {
     const titleEl = document.createElement('h3');
-    titleEl.className = 'widget-title';
+    titleEl.className = 'sg-m-0 sg-mb-6 sg-text-2xl sg-font-semibold sg-tracking-tight sg-text-slate-900 dark:sg-text-stone-100';
     titleEl.textContent = title;
     container.appendChild(titleEl);
   }
 
   // Create controls container
   const controls = document.createElement('div');
-  controls.className = 'widget-controls';
+  controls.className = 'sg-mb-4 sg-flex sg-flex-wrap sg-gap-4 sg-items-center';
   controls.style.alignItems = 'flex-end';
 
   // Distribution selector
   const distGroup = document.createElement('div');
-  distGroup.className = 'widget-input-group';
+  distGroup.className = 'sg-flex sg-items-center sg-gap-2.5';
   distGroup.style.flexDirection = 'column';
   distGroup.style.alignItems = 'flex-start';
   const distLabel = document.createElement('label');
-  distLabel.className = 'widget-label';
+  distLabel.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300';
   distLabel.textContent = 'Distribution:';
   const distSelect = document.createElement('select');
-  distSelect.className = 'widget-select';
+  distSelect.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
   distSelect.setAttribute('aria-label', 'Distribution type');
   ['normal', 'chisquare', 't'].forEach(dist => {
     const option = document.createElement('option');
@@ -236,14 +251,14 @@ function render({ model, el }) {
 
   // Mean input (for normal)
   const meanGroup = document.createElement('div');
-  meanGroup.className = 'widget-input-group';
+  meanGroup.className = 'sg-flex sg-items-center sg-gap-2.5';
   meanGroup.style.flexDirection = 'column';
   meanGroup.style.alignItems = 'flex-start';
   const meanLabel = document.createElement('label');
-  meanLabel.className = 'widget-label';
+  meanLabel.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300';
   meanLabel.textContent = 'Mean:';
   const meanInput = document.createElement('input');
-  meanInput.className = 'widget-input';
+  meanInput.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
   meanInput.type = 'number';
   meanInput.value = mean;
   meanInput.step = '0.1';
@@ -253,14 +268,14 @@ function render({ model, el }) {
 
   // SD input (for normal)
   const sdGroup = document.createElement('div');
-  sdGroup.className = 'widget-input-group';
+  sdGroup.className = 'sg-flex sg-items-center sg-gap-2.5';
   sdGroup.style.flexDirection = 'column';
   sdGroup.style.alignItems = 'flex-start';
   const sdLabel = document.createElement('label');
-  sdLabel.className = 'widget-label';
+  sdLabel.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300';
   sdLabel.textContent = 'SD:';
   const sdInput = document.createElement('input');
-  sdInput.className = 'widget-input';
+  sdInput.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
   sdInput.type = 'number';
   sdInput.value = sd;
   sdInput.step = '0.1';
@@ -271,14 +286,14 @@ function render({ model, el }) {
 
   // DF input (for chisquare and t)
   const dfGroup = document.createElement('div');
-  dfGroup.className = 'widget-input-group';
+  dfGroup.className = 'sg-flex sg-items-center sg-gap-2.5';
   dfGroup.style.flexDirection = 'column';
   dfGroup.style.alignItems = 'flex-start';
   const dfLabel = document.createElement('label');
-  dfLabel.className = 'widget-label';
+  dfLabel.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300';
   dfLabel.textContent = 'Degrees of Freedom:';
   const dfInput = document.createElement('input');
-  dfInput.className = 'widget-input';
+  dfInput.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
   dfInput.type = 'number';
   dfInput.value = df;
   dfInput.step = '1';
@@ -300,14 +315,14 @@ function render({ model, el }) {
 
   // Lo input
   const loGroup = document.createElement('div');
-  loGroup.className = 'widget-input-group';
+  loGroup.className = 'sg-flex sg-items-center sg-gap-2.5';
   loGroup.style.flexDirection = 'column';
   loGroup.style.alignItems = 'flex-start';
   const loLabel = document.createElement('label');
-  loLabel.className = 'widget-label';
+  loLabel.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300';
   loLabel.textContent = 'Lower bound:';
   const loInput = document.createElement('input');
-  loInput.className = 'widget-input';
+  loInput.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
   loInput.type = 'number';
   loInput.value = lo;
   loInput.step = '0.1';
@@ -318,14 +333,14 @@ function render({ model, el }) {
 
   // Hi input
   const hiGroup = document.createElement('div');
-  hiGroup.className = 'widget-input-group';
+  hiGroup.className = 'sg-flex sg-items-center sg-gap-2.5';
   hiGroup.style.flexDirection = 'column';
   hiGroup.style.alignItems = 'flex-start';
   const hiLabel = document.createElement('label');
-  hiLabel.className = 'widget-label';
+  hiLabel.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300';
   hiLabel.textContent = 'Upper bound:';
   const hiInput = document.createElement('input');
-  hiInput.className = 'widget-input';
+  hiInput.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
   hiInput.type = 'number';
   hiInput.value = hi;
   hiInput.step = '0.1';
@@ -342,7 +357,7 @@ function render({ model, el }) {
 
   // Probability display
   const probDisplay = document.createElement('div');
-  probDisplay.className = 'widget-display';
+  probDisplay.className = 'sg-mb-4 sg-text-sm sg-text-slate-900 dark:sg-text-stone-200';
   probDisplay.setAttribute('data-testid', 'prob-display');
   container.appendChild(probDisplay);
 

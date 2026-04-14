@@ -4,24 +4,39 @@
 import { PRNG } from '../../src/sim/prng.mjs';
 import { mean, sampleSD, sd, normalPDF, normalCDFRange } from '../../src/math/stats-math.mjs';
 import { bin } from 'd3-array';
-import styles from './styles.css';
+import styles from '../../css/sticigui-tailwind.css';
 
-function injectStyles() {
-  if (!document.getElementById('sampling-dist-styles')) {
+function injectStyles(el) {
+  if (!el.querySelector('.widget-styles')) {
     const styleEl = document.createElement('style');
-    styleEl.id = 'sampling-dist-styles';
+    styleEl.className = 'widget-styles';
     styleEl.textContent = styles;
-    document.head.appendChild(styleEl);
+    el.appendChild(styleEl);
   }
 }
 
 // Helper to get CSS variable value
 function getCSSVar(name) {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const root = document.querySelector('.sg-widget-root') || document.documentElement;
+  const val = getComputedStyle(root).getPropertyValue(name).trim();
+  if (val) return val;
+  const fallbacks = {
+    '--widget-text-primary': '#000000',
+    '--widget-text-secondary': '#57534e',
+    '--widget-bg-primary': '#ffffff',
+    '--widget-bg-secondary': '#f5f5f4',
+    '--widget-border-light': '#d6d3d1',
+    '--widget-border-dark': '#44403c',
+    '--widget-accent': '#ea580c',
+    '--widget-primary': '#0ea5e9',
+    '--widget-primary-highlight': '#f97316',
+    '--widget-chart-line': '#dc2626'
+  };
+  return fallbacks[name] || '#000000';
 }
 
 export function render({ model, el }) {
-  injectStyles();
+  injectStyles(el);
   
   // State
   let statistic = model.get('statistic') || 'mean';
@@ -44,17 +59,17 @@ export function render({ model, el }) {
   
   // Create UI
   const container = document.createElement('div');
-  container.className = 'widget-container';
+  container.className = 'sg-font-sans sg-p-6 sg-max-w-[800px] sg-bg-white dark:sg-bg-stone-950 sg-rounded-xl sg-shadow-sm sg-border sg-border-slate-200 dark:sg-border-stone-800 sg-text-slate-900 dark:sg-text-stone-100 sg-widget-root sg-transition-colors';
   
   // Group 1: Configuration
   const configControls = document.createElement('div');
-  configControls.className = 'widget-controls';
+  configControls.className = 'sg-mb-4 sg-flex sg-flex-wrap sg-gap-4 sg-items-center';
   
   const statGroup = document.createElement('div');
-  statGroup.className = 'widget-input-group';
-  statGroup.innerHTML = '<label class="widget-label">Distribution of:</label>';
+  statGroup.className = 'sg-flex sg-items-center sg-gap-2.5';
+  statGroup.innerHTML = '<label class="sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300">Distribution of:</label>';
   const statSelect = document.createElement('select');
-  statSelect.className = 'widget-select';
+  statSelect.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
   ['mean', 'sum', 'variance', 'chi_square'].forEach(s => {
     const opt = document.createElement('option');
     opt.value = s;
@@ -65,10 +80,10 @@ export function render({ model, el }) {
   statGroup.appendChild(statSelect);
   
   const popGroup = document.createElement('div');
-  popGroup.className = 'widget-input-group';
-  popGroup.innerHTML = '<label class="widget-label">Sample from:</label>';
+  popGroup.className = 'sg-flex sg-items-center sg-gap-2.5';
+  popGroup.innerHTML = '<label class="sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300">Sample from:</label>';
   const popSelect = document.createElement('select');
-  popSelect.className = 'widget-select';
+  popSelect.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
   ['box', 'uniform', 'normal'].forEach(p => {
     const opt = document.createElement('option');
     opt.value = p;
@@ -79,10 +94,10 @@ export function render({ model, el }) {
   popGroup.appendChild(popSelect);
   
   const boxInputGroup = document.createElement('div');
-  boxInputGroup.className = 'widget-input-group';
+  boxInputGroup.className = 'sg-flex sg-items-center sg-gap-2.5';
   const boxInput = document.createElement('input');
   boxInput.type = 'text';
-  boxInput.className = 'widget-input';
+  boxInput.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
   boxInput.style.width = '150px';
   boxInput.value = populationValues.join(', ');
   boxInputGroup.appendChild(boxInput);
@@ -102,61 +117,61 @@ export function render({ model, el }) {
   
   // Group 2: Sampling Parameters
   const sampleControls = document.createElement('div');
-  sampleControls.className = 'widget-controls';
+  sampleControls.className = 'sg-mb-4 sg-flex sg-flex-wrap sg-gap-4 sg-items-center';
   
   const szGroup = document.createElement('div');
-  szGroup.className = 'widget-input-group';
-  szGroup.innerHTML = '<label class="widget-label">Sample Size:</label>';
+  szGroup.className = 'sg-flex sg-items-center sg-gap-2.5';
+  szGroup.innerHTML = '<label class="sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300">Sample Size:</label>';
   const szInput = document.createElement('input');
-  szInput.type = 'number'; szInput.value = sampleSize; szInput.className = 'widget-input';
+  szInput.type = 'number'; szInput.value = sampleSize; szInput.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
   szGroup.appendChild(szInput);
   
   const spcGroup = document.createElement('div');
-  spcGroup.className = 'widget-input-group';
-  spcGroup.innerHTML = '<label class="widget-label">Take N samples:</label>';
+  spcGroup.className = 'sg-flex sg-items-center sg-gap-2.5';
+  spcGroup.innerHTML = '<label class="sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300">Take N samples:</label>';
   const spcInput = document.createElement('input');
-  spcInput.type = 'number'; spcInput.value = samplesPerClick; spcInput.className = 'widget-input';
+  spcInput.type = 'number'; spcInput.value = samplesPerClick; spcInput.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
   spcGroup.appendChild(spcInput);
   
   const binGroup = document.createElement('div');
-  binGroup.className = 'widget-input-group';
-  binGroup.innerHTML = '<label class="widget-label">Bins:</label>';
+  binGroup.className = 'sg-flex sg-items-center sg-gap-2.5';
+  binGroup.innerHTML = '<label class="sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300">Bins:</label>';
   const binInput = document.createElement('input');
-  binInput.type = 'number'; binInput.value = numBins; binInput.className = 'widget-input';
+  binInput.type = 'number'; binInput.value = numBins; binInput.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
   binGroup.appendChild(binInput);
   
   const takeSampleBtn = document.createElement('button');
-  takeSampleBtn.className = 'widget-button widget-button-primary';
+  takeSampleBtn.className = 'sg-px-4 sg-py-2 sg-text-sm sg-font-medium sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-700 dark:sg-text-stone-200 sg-shadow-sm sg-cursor-pointer sg-transition-colors hover:sg-bg-slate-50 dark:hover:sg-bg-stone-800 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:ring-offset-2 dark:sg-focus:ring-offset-stone-950';
   takeSampleBtn.textContent = 'Take Sample';
   
   const clearBtn = document.createElement('button');
-  clearBtn.className = 'widget-button widget-button-secondary';
+  clearBtn.className = 'sg-px-4 sg-py-2 sg-text-sm sg-font-medium sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-700 dark:sg-text-stone-200 sg-shadow-sm sg-cursor-pointer sg-transition-colors hover:sg-bg-slate-50 dark:hover:sg-bg-stone-800 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:ring-offset-2 dark:sg-focus:ring-offset-stone-950';
   clearBtn.textContent = 'Clear';
   
   sampleControls.append(szGroup, spcGroup, binGroup, takeSampleBtn, clearBtn);
   
   // Group 3: Analysis
   const highlightControls = document.createElement('div');
-  highlightControls.className = 'widget-controls';
+  highlightControls.className = 'sg-mb-4 sg-flex sg-flex-wrap sg-gap-4 sg-items-center';
   
   const areaGroup = document.createElement('div');
-  areaGroup.className = 'widget-input-group';
-  areaGroup.innerHTML = '<label class="widget-label">Area from:</label>';
+  areaGroup.className = 'sg-flex sg-items-center sg-gap-2.5';
+  areaGroup.innerHTML = '<label class="sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300">Area from:</label>';
   const areaFromInput = document.createElement('input');
-  areaFromInput.type = 'number'; areaFromInput.className = 'widget-input'; areaFromInput.style.width = '70px';
+  areaFromInput.type = 'number'; areaFromInput.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500'; areaFromInput.style.width = '70px';
   areaFromInput.value = lo !== null ? lo : '';
   const toLabel = document.createElement('span');
-  toLabel.className = 'widget-label'; toLabel.textContent = 'to:';
+  toLabel.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300'; toLabel.textContent = 'to:';
   const areaToInput = document.createElement('input');
-  areaToInput.type = 'number'; areaToInput.className = 'widget-input'; areaToInput.style.width = '70px';
+  areaToInput.type = 'number'; areaToInput.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500'; areaToInput.style.width = '70px';
   areaToInput.value = hi !== null ? hi : '';
   areaGroup.append(areaFromInput, toLabel, areaToInput);
   
   const curveGroup = document.createElement('div');
-  curveGroup.className = 'widget-input-group';
-  curveGroup.innerHTML = '<label class="widget-label">Curve:</label>';
+  curveGroup.className = 'sg-flex sg-items-center sg-gap-2.5';
+  curveGroup.innerHTML = '<label class="sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300">Curve:</label>';
   const curveSelect = document.createElement('select');
-  curveSelect.className = 'widget-select';
+  curveSelect.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
   ['Normal Curve', 'None'].forEach(c => {
     const opt = document.createElement('option');
     opt.value = c; opt.textContent = c;
@@ -165,7 +180,7 @@ export function render({ model, el }) {
   curveGroup.appendChild(curveSelect);
   
   const togglePopHistBtn = document.createElement('button');
-  togglePopHistBtn.className = 'widget-button widget-button-secondary';
+  togglePopHistBtn.className = 'sg-px-4 sg-py-2 sg-text-sm sg-font-medium sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-700 dark:sg-text-stone-200 sg-shadow-sm sg-cursor-pointer sg-transition-colors hover:sg-bg-slate-50 dark:hover:sg-bg-stone-800 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:ring-offset-2 dark:sg-focus:ring-offset-stone-950';
   togglePopHistBtn.textContent = 'No Population Histogram';
   
   highlightControls.append(areaGroup, curveGroup, togglePopHistBtn);

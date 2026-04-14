@@ -12,21 +12,36 @@
  */
 
 import { PRNG } from '../../src/sim/prng.mjs';
-import styles from './styles.css';
+import styles from '../../css/sticigui-tailwind.css';
 
 // Inject styles into document
-function injectStyles() {
-  if (!document.getElementById('lln-styles')) {
+function injectStyles(el) {
+  if (!el.querySelector('.widget-styles')) {
     const styleEl = document.createElement('style');
-    styleEl.id = 'lln-styles';
+    styleEl.className = 'widget-styles';
     styleEl.textContent = styles;
-    document.head.appendChild(styleEl);
+    el.appendChild(styleEl);
   }
 }
 
 // Helper to get CSS variable value
 function getCSSVar(name) {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const root = document.querySelector('.sg-widget-root') || document.documentElement;
+  const val = getComputedStyle(root).getPropertyValue(name).trim();
+  if (val) return val;
+  const fallbacks = {
+    '--widget-text-primary': '#000000',
+    '--widget-text-secondary': '#57534e',
+    '--widget-bg-primary': '#ffffff',
+    '--widget-bg-secondary': '#f5f5f4',
+    '--widget-border-light': '#d6d3d1',
+    '--widget-border-dark': '#44403c',
+    '--widget-accent': '#ea580c',
+    '--widget-primary': '#0ea5e9',
+    '--widget-primary-highlight': '#f97316',
+    '--widget-chart-line': '#dc2626'
+  };
+  return fallbacks[name] || '#000000';
 }
 
 /**
@@ -34,7 +49,7 @@ function getCSSVar(name) {
  */
 export function render({ model, el }) {
   // Inject CSS
-  injectStyles();
+  injectStyles(el);
   
   // Get model state
   let title = model.get('title');
@@ -48,28 +63,28 @@ export function render({ model, el }) {
   
   // Container setup
   const container = document.createElement('div');
-  container.className = 'widget-container';
+  container.className = 'sg-font-sans sg-p-6 sg-max-w-[800px] sg-bg-white dark:sg-bg-stone-950 sg-rounded-xl sg-shadow-sm sg-border sg-border-slate-200 dark:sg-border-stone-800 sg-text-slate-900 dark:sg-text-stone-100 sg-widget-root sg-transition-colors';
   
   // Title (optional)
   if (title) {
     const titleEl = document.createElement('h3');
-    titleEl.className = 'widget-title';
+    titleEl.className = 'sg-m-0 sg-mb-6 sg-text-2xl sg-font-semibold sg-tracking-tight sg-text-slate-900 dark:sg-text-stone-100';
     titleEl.textContent = title;
     container.appendChild(titleEl);
   }
   
   // Controls container
   const controls = document.createElement('div');
-  controls.className = 'widget-controls';
+  controls.className = 'sg-mb-4 sg-flex sg-flex-wrap sg-gap-4 sg-items-center';
   
   // N input
   const nGroup = document.createElement('div');
-  nGroup.className = 'widget-input-group';
+  nGroup.className = 'sg-flex sg-items-center sg-gap-2.5';
   const nLabel = document.createElement('label');
-  nLabel.className = 'widget-label';
+  nLabel.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300';
   nLabel.textContent = 'Number of trials (n):';
   const nInput = document.createElement('input');
-  nInput.className = 'widget-input';
+  nInput.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
   nInput.type = 'number';
   nInput.value = n;
   nInput.min = '10';
@@ -82,12 +97,12 @@ export function render({ model, el }) {
   
   // P input
   const pGroup = document.createElement('div');
-  pGroup.className = 'widget-input-group';
+  pGroup.className = 'sg-flex sg-items-center sg-gap-2.5';
   const pLabel = document.createElement('label');
-  pLabel.className = 'widget-label';
+  pLabel.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300';
   pLabel.textContent = 'Chances of success (%):';
   const pInput = document.createElement('input');
-  pInput.className = 'widget-input';
+  pInput.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
   pInput.type = 'number';
   pInput.value = p * 100;
   pInput.min = '0';
@@ -100,7 +115,7 @@ export function render({ model, el }) {
   
   // Mode toggle button
   const modeButton = document.createElement('button');
-  modeButton.className = 'widget-button';
+  modeButton.className = 'sg-px-4 sg-py-2 sg-text-sm sg-font-medium sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-700 dark:sg-text-stone-200 sg-shadow-sm sg-cursor-pointer sg-transition-colors hover:sg-bg-slate-50 dark:hover:sg-bg-stone-800 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:ring-offset-2 dark:sg-focus:ring-offset-stone-950';
   modeButton.textContent = mode === 'count' ? 'Show: Count Difference' : 'Show: Proportion Difference';
   modeButton.setAttribute('data-testid', 'mode-button');
   modeButton.setAttribute('aria-label', `Toggle between count and proportion difference (currently ${mode})`);

@@ -20,15 +20,15 @@ import { fetchData } from '../../src/utils/fetchData.mjs';
 import { mean, sampleSD, linearRegression } from '../../src/math/stats-math.mjs';
 import { isDarkMode, getColor, colors } from '../../src/utils/dark-mode.mjs';
 
-import styles from './styles.css';
+import styles from '../../css/sticigui-tailwind.css';
 
 // Inject styles into document
-function injectStyles() {
-  if (!document.getElementById('scatterplot-styles')) {
+function injectStyles(el) {
+  if (!el.querySelector('.widget-styles')) {
     const styleEl = document.createElement('style');
-    styleEl.id = 'scatterplot-styles';
+    styleEl.className = 'widget-styles';
     styleEl.textContent = styles;
-    document.head.appendChild(styleEl);
+    el.appendChild(styleEl);
   }
 }
 
@@ -36,7 +36,7 @@ function injectStyles() {
  * Main render function
  */
 export async function render({ model, el }) {
-  injectStyles();
+  injectStyles(el);
   // Get model state
   let title = model.get('title');
   const dataSpec = model.get('data');
@@ -75,26 +75,19 @@ export async function render({ model, el }) {
   let variables = [];
   
   // Container setup
-  el.style.fontFamily = 'system-ui, -apple-system, sans-serif';
-  el.style.padding = '1rem';
+  el.className = 'sg-font-sans sg-p-6 sg-max-w-[800px] sg-bg-white dark:sg-bg-stone-950 sg-rounded-xl sg-shadow-sm sg-border sg-border-slate-200 dark:sg-border-stone-800 sg-text-slate-900 dark:sg-text-stone-100 sg-widget-root sg-transition-colors';
   
   // Title (optional)
   if (title) {
     const titleEl = document.createElement('h3');
     titleEl.textContent = title;
-    titleEl.style.marginTop = '0';
-    titleEl.style.marginBottom = '1rem';
-    titleEl.style.color = getColor(el, colors.text.light, colors.text.dark);
+    titleEl.className = 'sg-m-0 sg-mb-6 sg-text-2xl sg-font-semibold sg-tracking-tight sg-text-slate-900 dark:sg-text-stone-100';
     el.appendChild(titleEl);
   }
   
   // Controls row 1: Dataset and variable selectors
   const controls1 = document.createElement('div');
-  controls1.style.marginBottom = '0.5rem';
-  controls1.style.display = 'flex';
-  controls1.style.gap = '1rem';
-  controls1.style.flexWrap = 'wrap';
-  controls1.style.alignItems = 'flex-end';
+  controls1.className = 'sg-mb-4 sg-flex sg-flex-wrap sg-gap-4 sg-items-center';
   
   // Dataset selector (only show if multiple datasets)
   let datasetSelect;
@@ -102,15 +95,10 @@ export async function render({ model, el }) {
     const datasetGroup = document.createElement('div');
     const datasetLabel = document.createElement('label');
     datasetLabel.textContent = 'Dataset:';
-    datasetLabel.style.display = 'block';
-    datasetLabel.style.marginBottom = '0.25rem';
-    datasetLabel.style.fontSize = '0.875rem';
-    datasetLabel.style.color = getColor(el, colors.text.light, colors.text.dark);
+    datasetLabel.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300';
     datasetSelect = document.createElement('select');
-    datasetSelect.style.padding = '0.5rem';
-    datasetSelect.style.border = `1px solid ${getColor(el, colors.border.light, colors.border.dark)}`;
-    datasetSelect.style.borderRadius = '4px';
-    datasetSelect.setAttribute('data-testid', 'dataset-select');
+    datasetSelect.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
+        datasetSelect.setAttribute('data-testid', 'dataset-select');
     datasetNames.forEach(ds => {
       const option = document.createElement('option');
       option.value = ds;
@@ -127,15 +115,10 @@ export async function render({ model, el }) {
   const xVarGroup = document.createElement('div');
   const xVarLabel = document.createElement('label');
   xVarLabel.textContent = 'X Variable:';
-  xVarLabel.style.display = 'block';
-  xVarLabel.style.marginBottom = '0.25rem';
-  xVarLabel.style.fontSize = '0.875rem';
-  xVarLabel.style.color = getColor(el, colors.text.light, colors.text.dark);
+  xVarLabel.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300';
   const xVarSelect = document.createElement('select');
-  xVarSelect.style.padding = '0.5rem';
-  xVarSelect.style.border = `1px solid ${getColor(el, colors.border.light, colors.border.dark)}`;
-  xVarSelect.style.borderRadius = '4px';
-  xVarSelect.setAttribute('data-testid', 'x-var-select');
+  xVarSelect.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
+    xVarSelect.setAttribute('data-testid', 'x-var-select');
   xVarGroup.appendChild(xVarLabel);
   xVarGroup.appendChild(xVarSelect);
   controls1.appendChild(xVarGroup);
@@ -144,15 +127,10 @@ export async function render({ model, el }) {
   const yVarGroup = document.createElement('div');
   const yVarLabel = document.createElement('label');
   yVarLabel.textContent = 'Y Variable:';
-  yVarLabel.style.display = 'block';
-  yVarLabel.style.marginBottom = '0.25rem';
-  yVarLabel.style.fontSize = '0.875rem';
-  yVarLabel.style.color = getColor(el, colors.text.light, colors.text.dark);
+  yVarLabel.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300';
   const yVarSelect = document.createElement('select');
-  yVarSelect.style.padding = '0.5rem';
-  yVarSelect.style.border = `1px solid ${getColor(el, colors.border.light, colors.border.dark)}`;
-  yVarSelect.style.borderRadius = '4px';
-  yVarSelect.setAttribute('data-testid', 'y-var-select');
+  yVarSelect.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
+    yVarSelect.setAttribute('data-testid', 'y-var-select');
   yVarGroup.appendChild(yVarLabel);
   yVarGroup.appendChild(yVarSelect);
   controls1.appendChild(yVarGroup);
@@ -161,11 +139,7 @@ export async function render({ model, el }) {
   
   // Controls row 2: Overlay toggles
   const controls2 = document.createElement('div');
-  controls2.style.marginBottom = '0.5rem';
-  controls2.style.display = 'flex';
-  controls2.style.gap = '1rem';
-  controls2.style.flexWrap = 'wrap';
-  controls2.style.alignItems = 'center';
+  controls2.className = 'sg-mb-4 sg-flex sg-flex-wrap sg-gap-4 sg-items-center';
   
   // Helper to create checkbox
   function createCheckbox(id, label, checked, testId) {
@@ -177,13 +151,9 @@ export async function render({ model, el }) {
     const labelEl = document.createElement('label');
     labelEl.htmlFor = id;
     labelEl.textContent = label;
-    labelEl.style.fontSize = '0.875rem';
-    labelEl.style.color = getColor(el, colors.text.light, colors.text.dark);
-    labelEl.style.cursor = 'pointer';
+    labelEl.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300 sg-cursor-pointer';
     const group = document.createElement('div');
-    group.style.display = 'flex';
-    group.style.alignItems = 'center';
-    group.style.gap = '0.5rem';
+    group.className = 'sg-flex sg-items-center sg-gap-2.5';
     group.appendChild(checkbox);
     group.appendChild(labelEl);
     return { group, checkbox };
@@ -215,47 +185,27 @@ export async function render({ model, el }) {
   // Clear button
   const clearButton = document.createElement('button');
   clearButton.textContent = 'Clear Added';
-  clearButton.style.padding = '0.5rem 1rem';
-  clearButton.style.border = `1px solid ${getColor(el, colors.border.light, colors.border.dark)}`;
-  clearButton.style.borderRadius = '4px';
-  clearButton.style.background = getColor(el, colors.background.light, colors.background.dark);
-  clearButton.style.color = getColor(el, colors.text.light, colors.text.dark);
-  clearButton.style.cursor = 'pointer';
-  clearButton.style.fontSize = '0.875rem';
+clearButton.className = 'sg-px-4 sg-py-2 sg-text-sm sg-font-medium sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-700 dark:sg-text-stone-200 sg-shadow-sm sg-cursor-pointer sg-transition-colors hover:sg-bg-slate-50 dark:hover:sg-bg-stone-800 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:ring-offset-2 dark:sg-focus:ring-offset-stone-950';
   clearButton.setAttribute('data-testid', 'clear-button');
   controls2.appendChild(clearButton);
   
   // List Data button
   const listDataBtn = document.createElement('button');
   listDataBtn.textContent = 'List Data';
-  listDataBtn.style.padding = '0.5rem 1rem';
-  listDataBtn.style.border = `1px solid ${getColor(el, colors.border.light, colors.border.dark)}`;
-  listDataBtn.style.borderRadius = '4px';
-  listDataBtn.style.background = getColor(el, colors.background.light, colors.background.dark);
-  listDataBtn.style.color = getColor(el, colors.text.light, colors.text.dark);
-  listDataBtn.style.cursor = 'pointer';
-  listDataBtn.style.fontSize = '0.875rem';
+listDataBtn.className = 'sg-px-4 sg-py-2 sg-text-sm sg-font-medium sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-700 dark:sg-text-stone-200 sg-shadow-sm sg-cursor-pointer sg-transition-colors hover:sg-bg-slate-50 dark:hover:sg-bg-stone-800 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:ring-offset-2 dark:sg-focus:ring-offset-stone-950';
   controls2.appendChild(listDataBtn);
 
   // Univariate Stats button
   const statsBtn = document.createElement('button');
   statsBtn.textContent = 'Univariate Stats';
-  statsBtn.style.padding = '0.5rem 1rem';
-  statsBtn.style.border = `1px solid ${getColor(el, colors.border.light, colors.border.dark)}`;
-  statsBtn.style.borderRadius = '4px';
-  statsBtn.style.background = getColor(el, colors.background.light, colors.background.dark);
-  statsBtn.style.color = getColor(el, colors.text.light, colors.text.dark);
-  statsBtn.style.cursor = 'pointer';
-  statsBtn.style.fontSize = '0.875rem';
+statsBtn.className = 'sg-px-4 sg-py-2 sg-text-sm sg-font-medium sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-700 dark:sg-text-stone-200 sg-shadow-sm sg-cursor-pointer sg-transition-colors hover:sg-bg-slate-50 dark:hover:sg-bg-stone-800 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:ring-offset-2 dark:sg-focus:ring-offset-stone-950';
   controls2.appendChild(statsBtn);
   
   el.appendChild(controls2);
   
   // Stats display
   const stats = document.createElement('div');
-  stats.style.marginBottom = '1rem';
-  stats.style.fontSize = '0.875rem';
-  stats.style.color = getColor(el, colors.text.light, colors.text.dark);
+  stats.className = 'sg-bg-slate-50 dark:sg-bg-stone-800/50 sg-rounded-lg sg-border sg-border-slate-200 dark:sg-border-stone-700 sg-p-4 sg-mb-6';
   stats.setAttribute('data-testid', 'stats-display');
   el.appendChild(stats);
   
@@ -283,26 +233,29 @@ export async function render({ model, el }) {
   function showDataModal() {
     if (!data || data.length === 0) return;
 
+    const wrapper = document.createElement('div');
+    wrapper.className = 'sg-widget-root';
+
     // Create modal overlay
     const overlay = document.createElement('div');
-    overlay.className = 'widget-modal-overlay';
+    overlay.className = 'sg-fixed sg-inset-0 sg-bg-black/50 sg-flex sg-items-center sg-justify-center sg-z-50';
     
     // Create modal content
     const modalContent = document.createElement('div');
-    modalContent.className = 'widget-modal-content';
+    modalContent.className = 'sg-bg-white dark:sg-bg-stone-900 sg-p-6 sg-rounded-xl sg-shadow-xl sg-max-w-2xl sg-w-full sg-max-h-[90vh] sg-flex sg-flex-col';
 
     // Header
     const header = document.createElement('div');
-    header.className = 'widget-modal-header';
+    header.className = 'sg-flex sg-justify-between sg-items-center sg-mb-4';
     
     const title = document.createElement('h3');
-    title.className = 'widget-modal-title';
+    title.className = 'sg-m-0 sg-text-xl sg-font-semibold sg-text-slate-900 dark:sg-text-stone-100';
     title.textContent = `Data: ${currentDataset}`;
     
     const closeBtn = document.createElement('button');
-    closeBtn.className = 'widget-modal-close';
+    closeBtn.className = 'sg-text-2xl sg-cursor-pointer sg-bg-transparent sg-border-none sg-text-slate-500 hover:sg-text-slate-700 dark:sg-text-stone-400 dark:hover:sg-text-stone-200';
     closeBtn.innerHTML = '&times;';
-    closeBtn.onclick = () => document.body.removeChild(overlay);
+    closeBtn.onclick = () => el.removeChild(wrapper);
     
     header.appendChild(title);
     header.appendChild(closeBtn);
@@ -314,7 +267,7 @@ export async function render({ model, el }) {
 
     // Table
     const table = document.createElement('table');
-    table.className = 'widget-table';
+    table.className = 'sg-w-full sg-text-left sg-border-collapse sg-text-sm sg-text-slate-900 dark:sg-text-stone-100';
     
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
@@ -350,11 +303,12 @@ export async function render({ model, el }) {
     // Close on overlay click
     overlay.onclick = (e) => {
       if (e.target === overlay) {
-        document.body.removeChild(overlay);
+        el.removeChild(wrapper);
       }
     };
 
-    document.body.appendChild(overlay);
+    wrapper.appendChild(overlay);
+    el.appendChild(wrapper);
   }
 
 
@@ -376,26 +330,29 @@ export async function render({ model, el }) {
   function showStatsModal() {
     if (!data || data.length === 0) return;
 
+    const wrapper = document.createElement('div');
+    wrapper.className = 'sg-widget-root';
+
     // Create modal overlay
     const overlay = document.createElement('div');
-    overlay.className = 'widget-modal-overlay';
+    overlay.className = 'sg-fixed sg-inset-0 sg-bg-black/50 sg-flex sg-items-center sg-justify-center sg-z-50';
     
     // Create modal content
     const modalContent = document.createElement('div');
-    modalContent.className = 'widget-modal-content';
+    modalContent.className = 'sg-bg-white dark:sg-bg-stone-900 sg-p-6 sg-rounded-xl sg-shadow-xl sg-max-w-2xl sg-w-full sg-max-h-[90vh] sg-flex sg-flex-col';
 
     // Header
     const header = document.createElement('div');
-    header.className = 'widget-modal-header';
+    header.className = 'sg-flex sg-justify-between sg-items-center sg-mb-4';
     
     const title = document.createElement('h3');
-    title.className = 'widget-modal-title';
+    title.className = 'sg-m-0 sg-text-xl sg-font-semibold sg-text-slate-900 dark:sg-text-stone-100';
     title.textContent = `Univariate Statistics: ${currentDataset}`;
     
     const closeBtn = document.createElement('button');
-    closeBtn.className = 'widget-modal-close';
+    closeBtn.className = 'sg-text-2xl sg-cursor-pointer sg-bg-transparent sg-border-none sg-text-slate-500 hover:sg-text-slate-700 dark:sg-text-stone-400 dark:hover:sg-text-stone-200';
     closeBtn.innerHTML = '&times;';
-    closeBtn.onclick = () => document.body.removeChild(overlay);
+    closeBtn.onclick = () => el.removeChild(wrapper);
     
     header.appendChild(title);
     header.appendChild(closeBtn);
@@ -407,7 +364,7 @@ export async function render({ model, el }) {
 
     // Table
     const table = document.createElement('table');
-    table.className = 'widget-table';
+    table.className = 'sg-w-full sg-text-left sg-border-collapse sg-text-sm sg-text-slate-900 dark:sg-text-stone-100';
     
     const thead = document.createElement('thead');
     const headerRow = document.createElement('tr');
@@ -467,11 +424,12 @@ export async function render({ model, el }) {
     // Close on overlay click
     overlay.onclick = (e) => {
       if (e.target === overlay) {
-        document.body.removeChild(overlay);
+        el.removeChild(wrapper);
       }
     };
 
-    document.body.appendChild(overlay);
+    wrapper.appendChild(overlay);
+    el.appendChild(wrapper);
   }
   function loadDataset(name) {
     data = datasets[name] || [];

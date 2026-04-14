@@ -13,21 +13,36 @@ import { bin } from 'd3-array';
 import { line, area } from 'd3-shape';
 import { fetchData } from '../../src/utils/fetchData.mjs';
 import { mean, sampleSD, normalPDF, normalCDF } from '../../src/math/stats-math.mjs';
-import styles from './styles.css';
+import styles from '../../css/sticigui-tailwind.css';
 
 // Inject styles into document
-function injectStyles() {
-  if (!document.getElementById('norm-approx-styles')) {
+function injectStyles(el) {
+  if (!el.querySelector('.widget-styles')) {
     const styleEl = document.createElement('style');
-    styleEl.id = 'norm-approx-styles';
+    styleEl.className = 'widget-styles';
     styleEl.textContent = styles;
-    document.head.appendChild(styleEl);
+    el.appendChild(styleEl);
   }
 }
 
 // Helper to get CSS variable value
 function getCSSVar(name) {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const root = document.querySelector('.sg-widget-root') || document.documentElement;
+  const val = getComputedStyle(root).getPropertyValue(name).trim();
+  if (val) return val;
+  const fallbacks = {
+    '--widget-text-primary': '#000000',
+    '--widget-text-secondary': '#57534e',
+    '--widget-bg-primary': '#ffffff',
+    '--widget-bg-secondary': '#f5f5f4',
+    '--widget-border-light': '#d6d3d1',
+    '--widget-border-dark': '#44403c',
+    '--widget-accent': '#ea580c',
+    '--widget-primary': '#0ea5e9',
+    '--widget-primary-highlight': '#f97316',
+    '--widget-chart-line': '#dc2626'
+  };
+  return fallbacks[name] || '#000000';
 }
 
 /**
@@ -211,7 +226,7 @@ function calculateNormalArea(data, lo, hi) {
  */
 async function render({ model, el }) {
   // Inject CSS
-  injectStyles();
+  injectStyles(el);
   
   // Load data
   const dataSpec = model.get('data') || '../../public-data/gravity.json';
@@ -230,28 +245,28 @@ async function render({ model, el }) {
 
   // Container setup
   const container = document.createElement('div');
-  container.className = 'widget-container';
+  container.className = 'sg-font-sans sg-p-6 sg-max-w-[800px] sg-bg-white dark:sg-bg-stone-950 sg-rounded-xl sg-shadow-sm sg-border sg-border-slate-200 dark:sg-border-stone-800 sg-text-slate-900 dark:sg-text-stone-100 sg-widget-root sg-transition-colors';
 
   // Title (optional)
   if (title) {
     const titleEl = document.createElement('h3');
-    titleEl.className = 'widget-title';
+    titleEl.className = 'sg-m-0 sg-mb-6 sg-text-2xl sg-font-semibold sg-tracking-tight sg-text-slate-900 dark:sg-text-stone-100';
     titleEl.textContent = title;
     container.appendChild(titleEl);
   }
 
   // Create controls container
   const controls = document.createElement('div');
-  controls.className = 'widget-controls';
+  controls.className = 'sg-mb-4 sg-flex sg-flex-wrap sg-gap-4 sg-items-center';
 
   // Bins input
   const binsGroup = document.createElement('div');
-  binsGroup.className = 'widget-input-group';
+  binsGroup.className = 'sg-flex sg-items-center sg-gap-2.5';
   const binsLabel = document.createElement('label');
-  binsLabel.className = 'widget-label';
+  binsLabel.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300';
   binsLabel.textContent = 'Bins:';
   const binsInput = document.createElement('input');
-  binsInput.className = 'widget-input';
+  binsInput.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
   binsInput.type = 'number';
   binsInput.value = numBins;
   binsInput.min = '1';
@@ -264,12 +279,12 @@ async function render({ model, el }) {
 
   // Lo input
   const loGroup = document.createElement('div');
-  loGroup.className = 'widget-input-group';
+  loGroup.className = 'sg-flex sg-items-center sg-gap-2.5';
   const loLabel = document.createElement('label');
-  loLabel.className = 'widget-label';
+  loLabel.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300';
   loLabel.textContent = 'Lower bound:';
   const loInput = document.createElement('input');
-  loInput.className = 'widget-input';
+  loInput.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
   loInput.type = 'number';
   loInput.value = lo;
   loInput.step = '0.1';
@@ -280,12 +295,12 @@ async function render({ model, el }) {
 
   // Hi input
   const hiGroup = document.createElement('div');
-  hiGroup.className = 'widget-input-group';
+  hiGroup.className = 'sg-flex sg-items-center sg-gap-2.5';
   const hiLabel = document.createElement('label');
-  hiLabel.className = 'widget-label';
+  hiLabel.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300';
   hiLabel.textContent = 'Upper bound:';
   const hiInput = document.createElement('input');
-  hiInput.className = 'widget-input';
+  hiInput.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
   hiInput.type = 'number';
   hiInput.value = hi;
   hiInput.step = '0.1';
@@ -300,7 +315,7 @@ async function render({ model, el }) {
 
   // Area displays
   const areaDisplay = document.createElement('div');
-  areaDisplay.className = 'widget-summary';
+  areaDisplay.className = 'sg-bg-slate-50 dark:sg-bg-stone-800/50 sg-rounded-lg sg-border sg-border-slate-200 dark:sg-border-stone-700 sg-p-4 sg-mb-6';
   areaDisplay.setAttribute('data-testid', 'area-display');
 
   const histArea = document.createElement('div');

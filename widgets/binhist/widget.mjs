@@ -16,21 +16,36 @@
 import { select } from 'd3-selection';
 import { line } from 'd3-shape';
 import { binomialPMF, binomialCDFRange, normalPDF } from '../../src/math/stats-math.mjs';
-import styles from './styles.css';
+import styles from '../../css/sticigui-tailwind.css';
 
 // Inject styles into document
-function injectStyles() {
-  if (!document.getElementById('binhist-styles')) {
+function injectStyles(el) {
+  if (!el.querySelector('.widget-styles')) {
     const styleEl = document.createElement('style');
-    styleEl.id = 'binhist-styles';
+    styleEl.className = 'widget-styles';
     styleEl.textContent = styles;
-    document.head.appendChild(styleEl);
+    el.appendChild(styleEl);
   }
 }
 
 // Helper to get CSS variable value
 function getCSSVar(name) {
-  return getComputedStyle(document.documentElement).getPropertyValue(name).trim();
+  const root = document.querySelector('.sg-widget-root') || document.documentElement;
+  const val = getComputedStyle(root).getPropertyValue(name).trim();
+  if (val) return val;
+  const fallbacks = {
+    '--widget-text-primary': '#000000',
+    '--widget-text-secondary': '#57534e',
+    '--widget-bg-primary': '#ffffff',
+    '--widget-bg-secondary': '#f5f5f4',
+    '--widget-border-light': '#d6d3d1',
+    '--widget-border-dark': '#44403c',
+    '--widget-accent': '#ea580c',
+    '--widget-primary': '#0ea5e9',
+    '--widget-primary-highlight': '#f97316',
+    '--widget-chart-line': '#dc2626'
+  };
+  return fallbacks[name] || '#000000';
 }
 
 export default {
@@ -38,7 +53,7 @@ export default {
     console.log('[binhist] render called', { model, el });
     
     // Inject CSS
-    injectStyles();
+    injectStyles(el);
     
     // Get initial state from model
     let n = model.get('n') || 10;
@@ -60,33 +75,33 @@ export default {
 
     // Create container
     const container = document.createElement('div');
-    container.className = 'widget-container';
+    container.className = 'sg-font-sans sg-p-6 sg-max-w-[800px] sg-bg-white dark:sg-bg-stone-950 sg-rounded-xl sg-shadow-sm sg-border sg-border-slate-200 dark:sg-border-stone-800 sg-text-slate-900 dark:sg-text-stone-100 sg-widget-root sg-transition-colors';
 
     // Create title if specified
     if (title) {
       const titleEl = document.createElement('h3');
-      titleEl.className = 'widget-title';
+      titleEl.className = 'sg-m-0 sg-mb-6 sg-text-2xl sg-font-semibold sg-tracking-tight sg-text-slate-900 dark:sg-text-stone-100';
       titleEl.textContent = title;
       container.appendChild(titleEl);
     }
 
     // Create controls container
     const controls = document.createElement('div');
-    controls.className = 'widget-controls';
+    controls.className = 'sg-mb-4 sg-flex sg-flex-wrap sg-gap-4 sg-items-center';
     container.appendChild(controls);
 
     // Helper to create labeled input
     function createInput(labelText, type, value, min, max, step) {
       const wrapper = document.createElement('div');
-      wrapper.className = 'widget-input-group';
+      wrapper.className = 'sg-flex sg-items-center sg-gap-2.5';
 
       const label = document.createElement('label');
-      label.className = 'widget-label';
+      label.className = 'sg-text-sm sg-font-medium sg-text-slate-700 dark:sg-text-stone-300';
       label.textContent = labelText;
       wrapper.appendChild(label);
 
       const input = document.createElement('input');
-      input.className = 'widget-input';
+      input.className = 'sg-px-3 sg-py-2 sg-text-sm sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-900 dark:sg-text-stone-100 sg-shadow-sm sg-transition-colors hover:sg-border-slate-400 dark:hover:sg-border-stone-500 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:border-blue-500';
       input.type = type;
       input.value = value;
       if (min !== undefined) input.min = min;
@@ -119,13 +134,13 @@ export default {
 
     // Create normal curve toggle
     const normalToggle = document.createElement('button');
-    normalToggle.className = showNormal ? 'widget-button widget-button-accent' : 'widget-button';
+    normalToggle.className = showNormal ? 'sg-px-4 sg-py-2 sg-text-sm sg-font-medium sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-700 dark:sg-text-stone-200 sg-shadow-sm sg-cursor-pointer sg-transition-colors hover:sg-bg-slate-50 dark:hover:sg-bg-stone-800 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:ring-offset-2 dark:sg-focus:ring-offset-stone-950' : 'sg-px-4 sg-py-2 sg-text-sm sg-font-medium sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-700 dark:sg-text-stone-200 sg-shadow-sm sg-cursor-pointer sg-transition-colors hover:sg-bg-slate-50 dark:hover:sg-bg-stone-800 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:ring-offset-2 dark:sg-focus:ring-offset-stone-950';
     normalToggle.textContent = showNormal ? 'Hide Normal Curve' : 'Show Normal Curve';
     controls.appendChild(normalToggle);
 
     // Create probability display
     const probDisplay = document.createElement('div');
-    probDisplay.className = 'widget-display';
+    probDisplay.className = 'sg-mb-4 sg-text-sm sg-text-slate-900 dark:sg-text-stone-200';
     container.appendChild(probDisplay);
 
     // Create SVG container
@@ -350,7 +365,7 @@ export default {
     normalToggle.addEventListener('click', () => {
       showNormal = !showNormal;
       normalToggle.textContent = showNormal ? 'Hide Normal Curve' : 'Show Normal Curve';
-      normalToggle.className = showNormal ? 'widget-button widget-button-accent' : 'widget-button';
+      normalToggle.className = showNormal ? 'sg-px-4 sg-py-2 sg-text-sm sg-font-medium sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-700 dark:sg-text-stone-200 sg-shadow-sm sg-cursor-pointer sg-transition-colors hover:sg-bg-slate-50 dark:hover:sg-bg-stone-800 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:ring-offset-2 dark:sg-focus:ring-offset-stone-950' : 'sg-px-4 sg-py-2 sg-text-sm sg-font-medium sg-border sg-border-slate-300 dark:sg-border-stone-700 sg-rounded-md sg-bg-white dark:sg-bg-stone-900 sg-text-slate-700 dark:sg-text-stone-200 sg-shadow-sm sg-cursor-pointer sg-transition-colors hover:sg-bg-slate-50 dark:hover:sg-bg-stone-800 sg-focus:outline-none sg-focus:ring-2 sg-focus:ring-blue-500 sg-focus:ring-offset-2 dark:sg-focus:ring-offset-stone-950';
       model.set('show_normal', showNormal);
       updateChart();
     });
