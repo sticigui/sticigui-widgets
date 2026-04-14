@@ -103,14 +103,9 @@ Sampling distribution of the mean with various population shapes.
 
 ::::{grid} 1 1 2 3
 
-:::{card} Venn Diagram — Two Sets
-:link: widgets/venn2.md
-Two-event probability visualization with draggable circles.
-:::
-
-:::{card} Venn Diagram — Three Sets
-:link: widgets/venn3.md
-Three-event probability visualization with constraint enforcement.
+:::{card} Venn Diagram
+:link: widgets/venn.md
+Probability visualization with two or three draggable sets.
 :::
 
 :::{card} Probability Calculator

@@ -17,8 +17,7 @@ project:
     - file: widgets/sampling-dist.md
     - file: widgets/scatterplot.md
     - file: widgets/stats-calc.md
-    - file: widgets/venn2.md
-    - file: widgets/venn3.md
+    - file: widgets/venn.md
     - file: datasets.md
   
 site:
