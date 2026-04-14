@@ -20,10 +20,23 @@ import { fetchData } from '../../src/utils/fetchData.mjs';
 import { mean, sampleSD, linearRegression } from '../../src/math/stats-math.mjs';
 import { isDarkMode, getColor, colors } from '../../src/utils/dark-mode.mjs';
 
+import styles from './styles.css';
+
+// Inject styles into document
+function injectStyles() {
+  if (!document.getElementById('scatterplot-styles')) {
+    const styleEl = document.createElement('style');
+    styleEl.id = 'scatterplot-styles';
+    styleEl.textContent = styles;
+    document.head.appendChild(styleEl);
+  }
+}
+
 /**
  * Main render function
  */
 export async function render({ model, el }) {
+  injectStyles();
   // Get model state
   let title = model.get('title');
   const dataSpec = model.get('data');
@@ -212,6 +225,30 @@ export async function render({ model, el }) {
   clearButton.setAttribute('data-testid', 'clear-button');
   controls2.appendChild(clearButton);
   
+  // List Data button
+  const listDataBtn = document.createElement('button');
+  listDataBtn.textContent = 'List Data';
+  listDataBtn.style.padding = '0.5rem 1rem';
+  listDataBtn.style.border = `1px solid ${getColor(el, colors.border.light, colors.border.dark)}`;
+  listDataBtn.style.borderRadius = '4px';
+  listDataBtn.style.background = getColor(el, colors.background.light, colors.background.dark);
+  listDataBtn.style.color = getColor(el, colors.text.light, colors.text.dark);
+  listDataBtn.style.cursor = 'pointer';
+  listDataBtn.style.fontSize = '0.875rem';
+  controls2.appendChild(listDataBtn);
+
+  // Univariate Stats button
+  const statsBtn = document.createElement('button');
+  statsBtn.textContent = 'Univariate Stats';
+  statsBtn.style.padding = '0.5rem 1rem';
+  statsBtn.style.border = `1px solid ${getColor(el, colors.border.light, colors.border.dark)}`;
+  statsBtn.style.borderRadius = '4px';
+  statsBtn.style.background = getColor(el, colors.background.light, colors.background.dark);
+  statsBtn.style.color = getColor(el, colors.text.light, colors.text.dark);
+  statsBtn.style.cursor = 'pointer';
+  statsBtn.style.fontSize = '0.875rem';
+  controls2.appendChild(statsBtn);
+  
   el.appendChild(controls2);
   
   // Stats display
@@ -242,6 +279,200 @@ export async function render({ model, el }) {
   /**
    * Load a dataset by name
    */
+
+  function showDataModal() {
+    if (!data || data.length === 0) return;
+
+    // Create modal overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'widget-modal-overlay';
+    
+    // Create modal content
+    const modalContent = document.createElement('div');
+    modalContent.className = 'widget-modal-content';
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'widget-modal-header';
+    
+    const title = document.createElement('h3');
+    title.className = 'widget-modal-title';
+    title.textContent = `Data: ${currentDataset}`;
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'widget-modal-close';
+    closeBtn.innerHTML = '&times;';
+    closeBtn.onclick = () => document.body.removeChild(overlay);
+    
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+    modalContent.appendChild(header);
+
+    // Table container (for scroll)
+    const tableContainer = document.createElement('div');
+    tableContainer.style.overflowX = 'auto';
+
+    // Table
+    const table = document.createElement('table');
+    table.className = 'widget-table';
+    
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    
+    // Determine columns
+    const firstRow = data[0];
+    const columns = typeof firstRow === 'object' ? Object.keys(firstRow) : ['value'];
+
+    columns.forEach(col => {
+      const th = document.createElement('th');
+      th.textContent = col;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+    data.forEach(row => {
+      const tr = document.createElement('tr');
+      columns.forEach(col => {
+        const td = document.createElement('td');
+        td.textContent = typeof row === 'object' ? row[col] : row;
+        tr.appendChild(td);
+      });
+      tbody.appendChild(tr);
+    });
+    table.appendChild(tbody);
+    tableContainer.appendChild(table);
+
+    modalContent.appendChild(tableContainer);
+    overlay.appendChild(modalContent);
+    
+    // Close on overlay click
+    overlay.onclick = (e) => {
+      if (e.target === overlay) {
+        document.body.removeChild(overlay);
+      }
+    };
+
+    document.body.appendChild(overlay);
+  }
+
+
+  function getPercentile(arr, p) {
+    if (arr.length === 0) return 0;
+    if (p <= 0) return arr[0];
+    if (p >= 100) return arr[arr.length - 1];
+
+    const index = (arr.length - 1) * p / 100;
+    const lower = Math.floor(index);
+    const upper = lower + 1;
+    const weight = index % 1;
+
+    if (upper >= arr.length) return arr[lower];
+    return arr[lower] * (1 - weight) + arr[upper] * weight;
+  }
+
+
+  function showStatsModal() {
+    if (!data || data.length === 0) return;
+
+    // Create modal overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'widget-modal-overlay';
+    
+    // Create modal content
+    const modalContent = document.createElement('div');
+    modalContent.className = 'widget-modal-content';
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'widget-modal-header';
+    
+    const title = document.createElement('h3');
+    title.className = 'widget-modal-title';
+    title.textContent = `Univariate Statistics: ${currentDataset}`;
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'widget-modal-close';
+    closeBtn.innerHTML = '&times;';
+    closeBtn.onclick = () => document.body.removeChild(overlay);
+    
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+    modalContent.appendChild(header);
+
+    // Table container
+    const tableContainer = document.createElement('div');
+    tableContainer.style.overflowX = 'auto';
+
+    // Table
+    const table = document.createElement('table');
+    table.className = 'widget-table';
+    
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    
+    // Columns
+    const statCols = ['Variable', 'Cases', 'Mean', 'SD', 'Min', 'LQ', 'Median', 'UQ', 'Max'];
+    statCols.forEach(col => {
+      const th = document.createElement('th');
+      th.textContent = col;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+
+    // Calculate stats for all numeric variables
+    variables.forEach(variable => {
+      const varData = data.map(row => parseFloat(row[variable])).filter(v => !isNaN(v));
+      if (varData.length === 0) return;
+
+      const sortedData = [...varData].sort((a, b) => a - b);
+      const n = varData.length;
+      const mean = varData.reduce((a, b) => a + b, 0) / n;
+      const sd = Math.sqrt(varData.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / n);
+      const min = sortedData[0];
+      const max = sortedData[n - 1];
+      const lq = getPercentile(sortedData, 25);
+      const median = getPercentile(sortedData, 50);
+      const uq = getPercentile(sortedData, 75);
+
+      const tr = document.createElement('tr');
+      
+      const tdVar = document.createElement('td');
+      tdVar.textContent = variable;
+      tr.appendChild(tdVar);
+
+      const tdN = document.createElement('td');
+      tdN.textContent = n;
+      tr.appendChild(tdN);
+
+      [mean, sd, min, lq, median, uq, max].forEach(val => {
+        const td = document.createElement('td');
+        td.textContent = Number.isInteger(val) ? val : val.toFixed(2);
+        tr.appendChild(td);
+      });
+
+      tbody.appendChild(tr);
+    });
+
+    table.appendChild(tbody);
+    tableContainer.appendChild(table);
+
+    modalContent.appendChild(tableContainer);
+    overlay.appendChild(modalContent);
+    
+    // Close on overlay click
+    overlay.onclick = (e) => {
+      if (e.target === overlay) {
+        document.body.removeChild(overlay);
+      }
+    };
+
+    document.body.appendChild(overlay);
+  }
   function loadDataset(name) {
     data = datasets[name] || [];
     currentDataset = name;
@@ -759,6 +990,10 @@ export async function render({ model, el }) {
   });
   
   svg.addEventListener('click', handleClick);
+
+  listDataBtn.addEventListener('click', showDataModal);
+  statsBtn.addEventListener('click', showStatsModal);
+
   
   // Initial load
   loadDataset(currentDataset);
