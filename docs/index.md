@@ -68,10 +68,6 @@ Side-by-side comparison of binomial and normal distributions.
 Data histogram with adjustable bin width and optional normal overlay.
 :::
 
-:::{card} Histogram Control
-Histogram with data filtering and subset comparison.
-:::
-
 :::{card} Scatterplot
 :link: widgets/scatterplot.md
 Bivariate data plots with regression lines and residual plots. Supports external datasets.
