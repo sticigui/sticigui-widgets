@@ -346,7 +346,7 @@ async function render({ model, el }) {
 
     const prop = calculateProportion(data, lo, hi);
     const count = Math.round(prop * data.length);
-    propDisplay.textContent = `Proportion in range [${formatNum(lo)}, ${formatNum(hi)}]: ${prop.toFixed(3)} (${count}/${data.length} values)`;
+    propDisplay.textContent = `Selected area: ${(prop * 100).toFixed(2)}% (${count}/${data.length} values)`;
 
     if (data.length > 0) {
       const mean = data.reduce((a, b) => a + b, 0) / data.length;
