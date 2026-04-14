@@ -507,40 +507,6 @@ export async function render({ model, el }) {
       }
     }
     
-    // Draw graph of averages
-    if (showGraphOfAverages && !showResiduals) {
-      const numBins = 10;
-      const binWidth = (xDomain[1] - xDomain[0]) / numBins;
-      
-      for (let i = 0; i < numBins; i++) {
-        const binStart = xDomain[0] + i * binWidth;
-        const binEnd = binStart + binWidth;
-        const binMid = (binStart + binEnd) / 2;
-        
-        // Find all points in this bin
-        const binPoints = [];
-        for (let j = 0; j < x.length; j++) {
-          if (x[j] >= binStart && x[j] < binEnd) {
-            binPoints.push(y[j]);
-          }
-        }
-        
-        if (binPoints.length > 0) {
-          const binMeanY = mean(binPoints);
-          const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
-          rect.setAttribute('x', xScale(binMid) - 4);
-          rect.setAttribute('y', yScale(binMeanY) - 4);
-          rect.setAttribute('width', '8');
-          rect.setAttribute('height', '8');
-          rect.setAttribute('fill', 'yellow');
-          rect.setAttribute('stroke', 'orange');
-          rect.setAttribute('stroke-width', '1');
-          rect.setAttribute('data-testid', 'goa-point');
-          chartGroup.appendChild(rect);
-        }
-      }
-    }
-    
     // Draw data points
     for (let i = 0; i < Math.min(data.length, x.length); i++) {
       const circle = document.createElementNS('http://www.w3.org/2000/svg', 'circle');
@@ -566,6 +532,48 @@ export async function render({ model, el }) {
       circle.setAttribute('stroke-width', '1');
       circle.setAttribute('data-testid', 'added-point');
       chartGroup.appendChild(circle);
+    }
+
+    // Draw graph of averages (drawn after data points to appear on top)
+    if (showGraphOfAverages && !showResiduals) {
+      // Use the actual data bounds rather than the padded domain for binning
+      const numBins = 10;
+      const binWidth = (xMax - xMin) / numBins;
+      
+      for (let i = 0; i < numBins; i++) {
+        const binStart = xMin + i * binWidth;
+        const binEnd = i === numBins - 1 ? xMax + 1e-9 : binStart + binWidth; // ensure last bin includes max point
+        
+        // Find all points in this bin
+        let sumY = 0;
+        let count = 0;
+        let sumX = 0;
+        
+        for (let j = 0; j < x.length; j++) {
+          if (x[j] >= binStart && x[j] < binEnd) {
+            sumY += y[j];
+            sumX += x[j];
+            count++;
+          }
+        }
+        
+        if (count > 0) {
+          const binMeanX = sumX / count;
+          const binMeanY = sumY / count;
+          
+          const rect = document.createElementNS('http://www.w3.org/2000/svg', 'rect');
+          // Center the square at the mean X and mean Y of the points in the bin
+          rect.setAttribute('x', xScale(binMeanX) - 4);
+          rect.setAttribute('y', yScale(binMeanY) - 4);
+          rect.setAttribute('width', '8');
+          rect.setAttribute('height', '8');
+          rect.setAttribute('fill', 'yellow');
+          rect.setAttribute('stroke', 'orange');
+          rect.setAttribute('stroke-width', '1');
+          rect.setAttribute('data-testid', 'goa-point');
+          chartGroup.appendChild(rect);
+        }
+      }
     }
     
     // Draw point of averages
