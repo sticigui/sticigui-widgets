@@ -294,12 +294,18 @@ async function render({ model, el }) {
   listDataBtn.className = 'widget-button widget-button-secondary';
   listDataBtn.textContent = 'List Data';
 
+  // Univariate Stats button
+  const statsBtn = document.createElement('button');
+  statsBtn.className = 'widget-button widget-button-secondary';
+  statsBtn.textContent = 'Univariate Stats';
+
   controls.appendChild(dataGroup);
   controls.appendChild(varGroup);
   controls.appendChild(binsGroup);
   controls.appendChild(loGroup);
   controls.appendChild(hiGroup);
   controls.appendChild(listDataBtn);
+  controls.appendChild(statsBtn);
   container.appendChild(controls);
 
   // Stats display
@@ -426,6 +432,123 @@ async function render({ model, el }) {
     document.body.appendChild(overlay);
   }
 
+  // Calculate percentile
+  function getPercentile(arr, p) {
+    if (arr.length === 0) return 0;
+    if (p <= 0) return arr[0];
+    if (p >= 100) return arr[arr.length - 1];
+
+    const index = (arr.length - 1) * p / 100;
+    const lower = Math.floor(index);
+    const upper = lower + 1;
+    const weight = index % 1;
+
+    if (upper >= arr.length) return arr[lower];
+    return arr[lower] * (1 - weight) + arr[upper] * weight;
+  }
+
+  // Helper to show univariate stats modal
+  function showStatsModal() {
+    if (!selectedDataset || selectedDataset.length === 0) return;
+
+    // Create modal overlay
+    const overlay = document.createElement('div');
+    overlay.className = 'widget-modal-overlay';
+    
+    // Create modal content
+    const modalContent = document.createElement('div');
+    modalContent.className = 'widget-modal-content';
+
+    // Header
+    const header = document.createElement('div');
+    header.className = 'widget-modal-header';
+    
+    const title = document.createElement('h3');
+    title.className = 'widget-modal-title';
+    title.textContent = `Univariate Statistics: ${selectedDatasetName}`;
+    
+    const closeBtn = document.createElement('button');
+    closeBtn.className = 'widget-modal-close';
+    closeBtn.innerHTML = '&times;';
+    closeBtn.onclick = () => document.body.removeChild(overlay);
+    
+    header.appendChild(title);
+    header.appendChild(closeBtn);
+    modalContent.appendChild(header);
+
+    // Table container
+    const tableContainer = document.createElement('div');
+    tableContainer.style.overflowX = 'auto';
+
+    // Table
+    const table = document.createElement('table');
+    table.className = 'widget-table';
+    
+    const thead = document.createElement('thead');
+    const headerRow = document.createElement('tr');
+    
+    // Columns
+    const statCols = ['Variable', 'Cases', 'Mean', 'SD', 'Min', 'LQ', 'Median', 'UQ', 'Max'];
+    statCols.forEach(col => {
+      const th = document.createElement('th');
+      th.textContent = col;
+      headerRow.appendChild(th);
+    });
+    thead.appendChild(headerRow);
+    table.appendChild(thead);
+
+    const tbody = document.createElement('tbody');
+
+    // Calculate stats for all numeric variables
+    variables.forEach(variable => {
+      const varData = getVariableData(selectedDataset, variable);
+      if (varData.length === 0) return;
+
+      const sortedData = [...varData].sort((a, b) => a - b);
+      const n = varData.length;
+      const mean = varData.reduce((a, b) => a + b, 0) / n;
+      const sd = Math.sqrt(varData.reduce((a, b) => a + Math.pow(b - mean, 2), 0) / n);
+      const min = sortedData[0];
+      const max = sortedData[n - 1];
+      const lq = getPercentile(sortedData, 25);
+      const median = getPercentile(sortedData, 50);
+      const uq = getPercentile(sortedData, 75);
+
+      const tr = document.createElement('tr');
+      
+      const tdVar = document.createElement('td');
+      tdVar.textContent = variable;
+      tr.appendChild(tdVar);
+
+      const tdN = document.createElement('td');
+      tdN.textContent = n;
+      tr.appendChild(tdN);
+
+      [mean, sd, min, lq, median, uq, max].forEach(val => {
+        const td = document.createElement('td');
+        td.textContent = Number.isInteger(val) ? val : val.toFixed(2);
+        tr.appendChild(td);
+      });
+
+      tbody.appendChild(tr);
+    });
+
+    table.appendChild(tbody);
+    tableContainer.appendChild(table);
+
+    modalContent.appendChild(tableContainer);
+    overlay.appendChild(modalContent);
+    
+    // Close on overlay click
+    overlay.onclick = (e) => {
+      if (e.target === overlay) {
+        document.body.removeChild(overlay);
+      }
+    };
+
+    document.body.appendChild(overlay);
+  }
+
   // Event listeners
   dataSelect.addEventListener('change', () => {
     selectedDatasetName = dataSelect.value;
@@ -498,6 +621,7 @@ async function render({ model, el }) {
   });
 
   listDataBtn.addEventListener('click', showDataModal);
+  statsBtn.addEventListener('click', showStatsModal);
 
   // Append to element
   el.appendChild(container);
